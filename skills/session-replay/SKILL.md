@@ -52,8 +52,9 @@ Ask the user, before anything else:
    finished session (`scripts/find_session.py --cwd <dir>` lists a directory's sessions;
    [references/transcript-format.md](references/transcript-format.md) explains where they
    live).
-2. **What is private?** Their usernames, colleagues, hosts, projects, internal documents.
-   They know; you don't. Write their answers into `local-redact.json` and `scope.json`
+2. **What is private?** Their usernames and email, colleagues, hosts, projects, internal
+   documents. They know; you don't, but you can spot candidates: other people's account
+   names in fetched pages or file listings, and IDs or links of internal documents. Write their answers into `local-redact.json` and `scope.json`
    (see [references/redaction.md](references/redaction.md)).
 3. **Which part of the session?** The whole thing, or certain turns. Side quests the
    reader doesn't need are dropped with scope rules, not by hand-editing events.
@@ -113,7 +114,8 @@ numbers or description the event doesn't support.
 ## 5. Build and look at it
 
 ```bash
-pixi run lint      # schemas, formatting, lint
+pixi run lint      # schemas, formatting, lint (tracked files only)
+pixi run prek run --files stories/<folder>/*   # the new, still untracked story
 pixi run serve     # http://localhost:8000
 ```
 

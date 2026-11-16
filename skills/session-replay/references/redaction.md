@@ -6,7 +6,8 @@ garbage-collects it or Support purges it. Get redaction right before the first p
 
 ## Three layers
 
-1. **Generic defaults** in `scripts/extract_session.py`: home and temp paths, emails,
+1. **Generic defaults** in `scripts/extract_session.py`: home and temp paths (a trailing
+   file name is kept), emails (to the neutral `someone@example.org`),
    IPv4/IPv6 addresses, JWTs, bearer and API tokens, cloud keys, JupyterHub user URLs,
    and account-ID fields (`subject`, `sub`, `principal_id`, …), including inside
    string-escaped JSON that a tool returned as text.
@@ -24,6 +25,9 @@ garbage-collects it or Support purges it. Get redaction right before the first p
    ```
 
    Local patterns run before the defaults. Pass the same file to `leak_scan.py --local`.
+   Map the user's own email to `jovyan@example.org` here; the default sends every other
+   address to `someone@example.org`, so a colleague's action is never shown as the user's.
+   If the story needs to tell people apart, give each a distinct plain name.
 
 3. **Scope rules** in `scope.json` for whole pieces that must not appear: drop tool calls
    (`drop_tools`, `drop_tool_input_regex`), drop or replace Claude's text by prefix, and
@@ -49,6 +53,10 @@ These were all missed by an early version and found only after publishing:
 - **Internal documents**: search results from an organisation's internal notes, tickets
   or meeting minutes; figures labelled "Internal". Ask the user how their organisation
   treats these; the safe default is to omit them.
+- **What Claude derived from an omitted source.** Omitting a result does not remove what
+  Claude wrote after reading it: document IDs, titles and links (an internal note's number
+  and its access-restricted URL) in Claude's text or in files it wrote. Search for them and
+  ask the user, or mask them with local patterns.
 
 ## Review gates
 

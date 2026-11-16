@@ -54,6 +54,14 @@ Common mistakes this catches:
 
 If a claim cannot be checked from the session, cut it.
 
+**Explain behaviour from the session, not from the user's configuration.** The transcript
+can show you the user's private setup: their `CLAUDE.md`, personal rules, memory and
+hooks. Do not quote or paraphrase it in cards ("it does this because the user's own rules
+say…"); that publishes private configuration. Describe what Claude did and why it helps
+the reader ("it stages the two files by name, so the untracked log stays out"). If a step
+only makes sense with that context, say a setting was in effect without its content, and
+only if the user agrees.
+
 ## Time
 
 - Set `timezone` to where the session happened; the folder date and every clock use it.

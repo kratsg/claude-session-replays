@@ -1,0 +1,153 @@
+{
+  "$schema": "../../schemas/story.schema.json",
+  "schema": 1,
+  "title": "TTree → RNTuple on the ATLAS AF",
+  "subtitle": "A real Claude Code session that converts 32 GB of analysis ntuples on the UChicago Analysis Facility, entirely through the atlas-af MCP server.",
+  "setup": {
+    "intro": "atlas-af is one MCP endpoint in front of the facility's services: ATLAS knowledge search, HTCondor, JupyterHub, Rucio, AMI and more. You log in with your AF account; the gateway acts with your own credentials, so Claude never holds them.",
+    "steps": [
+      {
+        "label": "Add the server to Claude Code",
+        "code": "claude mcp add --transport http atlas-af https://mcp.af.uchicago.edu/mcp/"
+      },
+      {
+        "label": "Log in",
+        "code": "/mcp",
+        "note": "Inside Claude Code, pick atlas-af and authenticate with your AF account."
+      },
+      {
+        "label": "Ask in plain language",
+        "note": "Tools appear as mcp__atlas-af__<service>_<tool>: aos_* searches ATLAS documentation, condor_* drives the batch system, jhub_* drives JupyterHub."
+      }
+    ]
+  },
+  "stats_extra": [
+    {
+      "label": "Data converted",
+      "value": "32.37 GB → 9.22 GB"
+    },
+    {
+      "label": "Files validated",
+      "value": "23 / 23"
+    }
+  ],
+  "chapters": [
+    {
+      "at": 0,
+      "title": "Ask the knowledge base"
+    },
+    {
+      "at": 20,
+      "title": "Probe the facility"
+    },
+    {
+      "at": 71,
+      "title": "Convert at scale"
+    },
+    {
+      "at": 103,
+      "title": "Verify everything"
+    }
+  ],
+  "cards": [
+    {
+      "at": 0,
+      "title": "One prompt, no recipe",
+      "body": "The user names the goal and the MCP server, not the tool. Claude has to find out how ATLAS converts TTrees to RNTuple."
+    },
+    {
+      "at": 1,
+      "title": "Tools load on demand",
+      "body": "The facility exposes many tools. Claude loads only the schemas it needs, here the ATLAS OpenSearch (aos_*) ones."
+    },
+    {
+      "at": 2,
+      "title": "Searching ATLAS, not the web",
+      "body": "aos_search covers ATLAS documentation, JIRA tickets, GitLab, papers and meeting notes in one index. Each query returns ranked records with the matching passage."
+    },
+    {
+      "at": 9,
+      "title": "Reading the source",
+      "body": "aos_inspect reads a whole record. Here a production-system ticket gives the exact Merge_tf.py recipe ATLAS used for Open Data, and which release fixed it."
+    },
+    {
+      "at": 15,
+      "title": "Checking what the files really are",
+      "body": "The benchmarks read flat analysis ntuples, not xAOD, so the right tool is ROOT's RNTupleImporter rather than the Athena transform. One look at the repo settles it."
+    },
+    {
+      "at": 19,
+      "title": "An answer with options",
+      "body": "The turn ends with both routes, the caveats, and two questions for the user before anything is run."
+    },
+    {
+      "at": 22,
+      "title": "First try: an interactive session",
+      "body": "condor_interactive_session_* holds a batch slot and runs shell commands in it. Claude reached for it to explore. The user hadn't allowed that mode."
+    },
+    {
+      "at": 31,
+      "title": "The batch pattern",
+      "body": "condor_submit_job takes a normal submit file. Jobs run on the facility as you, with your own token. Small scripts go up with condor_upload_job_input; the job is released once its inputs arrive."
+    },
+    {
+      "at": 33,
+      "title": "Waiting without polling",
+      "body": "condor_watch_jobs registers a question (\"tell me when this is done\"), and condor_check_watches blocks until the answer arrives."
+    },
+    {
+      "at": 36,
+      "title": "A cheap probe first",
+      "body": "A read-only discovery job reports the input layout (two datasets, 32 GB), confirms the area is writable, and finds ROOT 6.34 with RNTupleImporter in the LCG view."
+    },
+    {
+      "at": 41,
+      "title": "You can steer mid-task",
+      "body": "Messages typed while Claude works arrive in the same turn. Here the user limits execution to batch jobs or JupyterHub, and Claude switches without losing the work in flight."
+    },
+    {
+      "at": 49,
+      "title": "Trial run on one file",
+      "body": "222 MB becomes 60 MB, but only the 43 scalar columns were checked. Claude adds checks for the 197 vector columns before trusting a 3.7× shrink."
+    },
+    {
+      "at": 70,
+      "title": "First real output",
+      "body": "One file converted into /data next to the originals, with all 240 columns validated: 2 minutes, 1 GB of memory."
+    },
+    {
+      "at": 71,
+      "title": "Fan out",
+      "body": "One submit, 22 jobs: `queue dataset, idx from (…)` creates one job per remaining file. A single upload call sends the scripts to every job."
+    },
+    {
+      "at": 103,
+      "title": "Independent verification",
+      "body": "A separate job waits for every output, then checks file counts, entry counts, leftover partial files and compression settings."
+    },
+    {
+      "at": 201,
+      "title": "The result",
+      "body": "23/23 files are RNTuple and match their TTrees. The compression settings show the inputs used zlib level 1, so part of the size win comes from compression, not the format."
+    },
+    {
+      "at": 202,
+      "title": "Wrap-up",
+      "body": "Everything ran on the facility through MCP tool calls: search, batch jobs, file checks. The only local work was writing the scripts that were uploaded."
+    }
+  ],
+  "outro": {
+    "note": "Redacted replay of a real session from 2026-11-15. Internal hostnames, IPs and job identifiers are masked; a side investigation of the facility's own tooling and the follow-up GitHub work are left out; one long tool output in a few places is truncated.",
+    "links": [
+      {
+        "label": "Conversion scripts (af-benchmarking#96)",
+        "href": "https://github.com/usatlas/af-benchmarking/pull/96"
+      },
+      {
+        "label": "AF documentation",
+        "href": "https://usatlas.github.io/af-docs/"
+      }
+    ]
+  },
+  "timezone": "America/Chicago"
+}

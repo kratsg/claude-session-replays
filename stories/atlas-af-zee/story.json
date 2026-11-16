@@ -1,0 +1,162 @@
+{
+  "$schema": "../../schemas/story.schema.json",
+  "schema": 1,
+  "title": "Z → ee in one prompt on the ATLAS AF",
+  "subtitle": "One prompt to Claude Code (Sonnet). Under four minutes later there is a tutorial notebook on the UChicago AF that finds an ATLAS Run 3 sample, streams it from the facility cache and fits the Z peak.",
+  "timezone": "America/Chicago",
+  "setup": {
+    "intro": "atlas-af is one MCP endpoint in front of the facility's services: ATLAS knowledge search, AMI, Rucio, JupyterHub, HTCondor and more. You log in with your AF account; the gateway acts with your own credentials, so Claude never holds them.",
+    "steps": [
+      {
+        "label": "Add the server to Claude Code",
+        "code": "claude mcp add --transport http atlas-af https://mcp.af.uchicago.edu/mcp/"
+      },
+      {
+        "label": "Log in",
+        "code": "/mcp",
+        "note": "Inside Claude Code, pick atlas-af and authenticate with your AF account."
+      },
+      {
+        "label": "Or run it headless with a token",
+        "code": "claude --model sonnet --mcp-config ./af-mcp.json --strict-mcp-config --allowedTools \"mcp__atlas-af\" \"WebFetch(domain:usatlas.github.io)\" \"Bash(date:*)\" -- \"$(cat prompt.md)\"",
+        "note": "This is how this replay was recorded: af-mcp.json points at the same endpoint with an Authorization: Bearer header holding a personal access token. The allowlist permits the atlas-af tools, reading the AF docs site, and the date command."
+      }
+    ]
+  },
+  "stats_extra": [
+    {
+      "label": "Fitted Z peak",
+      "value": "91.01 ± 0.08 GeV"
+    },
+    {
+      "label": "Events read",
+      "value": "10,000"
+    }
+  ],
+  "chapters": [
+    {
+      "at": 0,
+      "title": "One prompt"
+    },
+    {
+      "at": 4,
+      "title": "Server up, lookups in parallel"
+    },
+    {
+      "at": 14,
+      "title": "Find a copy at the facility"
+    },
+    {
+      "at": 27,
+      "title": "Set up the software"
+    },
+    {
+      "at": 45,
+      "title": "Read, select, fit"
+    },
+    {
+      "at": 61,
+      "title": "Report"
+    }
+  ],
+  "cards": [
+    {
+      "at": 0,
+      "title": "No dataset name, no package list",
+      "body": "The prompt names the physics goal and the facility's quirks (empty Rucio tags, a missing XRootD client, an IPv4-only cache), not the answer. Claude has to discover the sample, the data location and the software itself."
+    },
+    {
+      "at": 2,
+      "title": "Tools load on demand",
+      "body": "The gateway exposes many tools. Claude loads only the schemas it needs, in small batches, as the task moves from one service to the next."
+    },
+    {
+      "at": 4,
+      "title": "A usage baseline",
+      "body": "af_usage reports your own calls and an estimate of the tokens their results put into Claude's context. Calling it before and after gives the cost of this run."
+    },
+    {
+      "at": 7,
+      "title": "A notebook server in 11 seconds",
+      "body": "jhub_create_jupyter_server starts a JupyterHub server in your name on the facility's ML image. While it spawns, Claude already queries AMI and the knowledge base in parallel."
+    },
+    {
+      "at": 8,
+      "title": "AMI picks the sample",
+      "body": "ami_list_datasets lists the Run 3 PHYSLITE Z→ee samples. Claude picks the inclusive Powheg sample, DSID 601189, and later gets its cross-section from AMI: 1998.8 pb."
+    },
+    {
+      "at": 9,
+      "title": "A selection to cite",
+      "body": "aos_search in the analysis scope returns ATLAS analysis notes, so the notebook's electron cuts come with a documented source."
+    },
+    {
+      "at": 13,
+      "title": "The notebook exists",
+      "body": "jhub_nb_* tools edit and run notebook cells on the server. Every step from here is a saved cell, so the student gets the outputs, not just the code."
+    },
+    {
+      "at": 15,
+      "title": "Mistakes are cheap",
+      "body": "The first cross-section call used the wrong argument name. The gateway returns the tool's real schema with the error, and the retry a second later succeeds."
+    },
+    {
+      "at": 17,
+      "title": "Rucio decides where to read",
+      "body": "Most tags AMI lists have no files in Rucio. Claude checks the newest p-tag's containers for a replica at the facility's own storage (MWT2), running the queries in parallel, and finds the one that has it."
+    },
+    {
+      "at": 27,
+      "title": "Reading the facility docs",
+      "body": "Two quick fetches of the AF documentation give the XCache URL form and the pixi recipe for adding packages to the notebook image."
+    },
+    {
+      "at": 38,
+      "title": "Installing XRootD in 6 seconds",
+      "body": "pixi add, lock and install run in one cell with PIXI_CACHE_DIR on local disk. The default cache sits in the NFS home directory, where pixi hangs."
+    },
+    {
+      "at": 43,
+      "title": "Fix and re-run",
+      "body": "One line of the import check failed. Claude edits that cell and re-runs it, so the saved notebook is clean."
+    },
+    {
+      "at": 47,
+      "title": "Streaming through the facility cache",
+      "body": "uproot opens the file through the UChicago XCache, with XRD_NETWORKSTACK=IPv4 so the connection doesn't stall, and reads only the first 10,000 events."
+    },
+    {
+      "at": 54,
+      "title": "The physics",
+      "body": "Two opposite-charge good electrons per event give 3,725 pairs; 3,640 fall in 60–120 GeV. The median m_ee is 90.6 GeV."
+    },
+    {
+      "at": 59,
+      "title": "Checking a figure by numbers",
+      "body": "The prompt tells Claude it can't see the plot, so it places the ATLAS label above the axes and then checks the geometry in code: every label's bottom edge sits above the top of the axes."
+    },
+    {
+      "at": 62,
+      "title": "What it cost",
+      "body": "The second af_usage call closes the books: 45 gateway calls and about 17,000 estimated tokens of tool results, with 100 s of gateway time in a 3 min 22 s run."
+    },
+    {
+      "at": 63,
+      "title": "The deliverable",
+      "body": "A link to the finished notebook, a results table (Gaussian fit μ = 91.01 ± 0.08 GeV), and a candid note on where the MCP helped and where it got in the way."
+    }
+  ],
+  "outro": {
+    "note": "Recorded on 2026-11-15 (US Central) by running the demo prompt headless with Claude Sonnet and the atlas-af MCP server. Internal addresses are masked. The notebook server was deleted after the recording.",
+    "links": [
+      {
+        "label": "The prompt (gist)",
+        "href": "https://gist.github.com/kratsg/1ad031f0969359466e0a3b864c3749b3"
+      },
+      {
+        "label": "AF documentation",
+        "href": "https://usatlas.github.io/af-docs/"
+      }
+    ]
+  }
+}

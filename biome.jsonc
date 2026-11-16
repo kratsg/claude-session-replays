@@ -1,0 +1,35 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "files": { "includes": ["player/**/*.js", "player/**/*.css"] },
+  // prettier formats; biome only lints.
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      // The player is a single plain browser script in ES5 style (var, function
+      // expressions, string concatenation). These rules only push it toward ES2015+
+      // syntax; they find no bugs in it, so they stay off rather than force a rewrite.
+      "complexity": {
+        "useArrowFunction": "off",
+        "useOptionalChain": "off",
+        "noArguments": "off",
+        // !important is deliberate: reduced-motion and static modes must override
+        // every animation and transition, whatever their specificity.
+        "noImportantStyles": "off"
+      },
+      "style": {
+        "useTemplate": "off",
+        "useExponentiationOperator": "off",
+        // Rules are grouped by component, not ordered by specificity.
+        "noDescendingSpecificity": "off"
+      },
+      "correctness": { "noInnerDeclarations": "off" },
+      "suspicious": { "noRedundantUseStrict": "off" }
+    }
+  },
+  "javascript": {
+    "globals": ["gsap", "ScrollTrigger", "marked", "DOMPurify"]
+  }
+}

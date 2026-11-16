@@ -1,0 +1,70 @@
+# Run with prek (a drop-in pre-commit runner): `pixi run lint`, or `prek install`
+# to run the hooks on every commit.
+exclude: ^_site/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: '3e8a8703264a2f4a69428a0aa4dcb512790b2c8c' # frozen: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: '331f33fa4dfbcbca7c3da3620c137fde0faab273' # frozen: v3.9.10
+    hooks:
+      - id: prettier
+        types_or: [yaml, markdown, html, css, javascript, json]
+        # events.json is redacted session data, not hand-written source.
+        exclude: ^stories/[^/]+/events\.json$
+
+  # Lint only; prettier formats. Biome comes from the pixi environment, so run
+  # the hooks through `pixi run lint` (or inside `pixi shell`).
+  - repo: local
+    hooks:
+      - id: biome-lint
+        name: biome lint
+        language: system
+        entry: biome lint --error-on-warnings
+        files: ^player/.*\.(js|css)$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: '25bcf95026b96e2dd3c0aec3090c3d6ef6ca2e6c' # frozen: v0.17.3
+    hooks:
+      - id: ruff-check
+        args: ['--fix', '--show-fixes']
+      - id: ruff-format
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: '57b21406f092110c18776e39b0bda50d37c945c8' # frozen: v2.4.3
+    hooks:
+      - id: codespell
+        exclude: ^stories/[^/]+/events\.json$|^pixi\.lock$
+        # Identifiers in player/app.js, not misspellings.
+        args: ['-L', 'prevend,inout']
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: '39478bf2c099a58683d3f1aedf675105318b078d' # frozen: 0.39.0
+    hooks:
+      - id: check-github-workflows
+      - id: check-jsonschema
+        name: validate story.json
+        files: ^stories/[^/]+/story\.json$
+        args: ['--schemafile', 'schemas/story.schema.json']
+      - id: check-jsonschema
+        name: validate events.json
+        files: ^stories/[^/]+/events\.json$
+        args: ['--schemafile', 'schemas/events.schema.json']
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: c92afdf2c6ca336aaa8f39e2bd8d48f62dbd8e1f # frozen: v1.31.1
+    hooks:
+      - id: zizmor
+        args: [--persona=pedantic, --min-severity=low]

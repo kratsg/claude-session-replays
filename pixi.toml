@@ -1,11 +1,15 @@
 [workspace]
 name = "claude-session-replays"
+version = "1.0.0"
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "osx-64"]
 
 [dependencies]
 python = "3.12.*"
 check-jsonschema = ">=0.29"
+tbump = ">=6.9"
+prek = ">=0.5"
+biome = ">=2.6"
 
 [tasks]
 validate-stories = "check-jsonschema --schemafile schemas/story.schema.json stories/*/story.json"
@@ -13,3 +17,7 @@ validate-events = "check-jsonschema --schemafile schemas/events.schema.json stor
 validate = { depends-on = ["validate-stories", "validate-events"] }
 build = { cmd = "python tools/build_site.py", depends-on = ["validate"] }
 serve = { cmd = "python -m http.server -d _site 8000", depends-on = ["build"] }
+# Bump the player version, commit and tag player-vX.Y.Z: pixi run release 1.1.0
+release = "tbump"
+# Every pre-commit hook in .pre-commit-config.yaml, run by prek on the whole repo.
+lint = "prek run --all-files"

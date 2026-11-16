@@ -118,7 +118,14 @@ def landing_page(entries: list[dict], version: str) -> str:
   .t {{ font-weight: 600; font-size: 1.15rem; padding-right: 7.5rem; }}
   .s {{ color: var(--fg2); }}
   .m {{ color: var(--acc); font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; }}
+  .diy {{ margin-top: 3.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }}
+  .diy h2 {{ font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 1.4rem; margin: 0 0 0.8rem; }}
+  .diy p {{ color: var(--fg2); }}
+  .diy a, footer a {{ display: inline; padding: 0; border: 0; color: var(--acc); }}
+  .diy pre {{ overflow-x: auto; background: #10141a; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.85rem; }}
+  code {{ font-family: ui-monospace, Menlo, monospace; }}
   footer {{ margin-top: 3rem; color: var(--fg2); font-size: 0.8rem; font-family: ui-monospace, Menlo, monospace; }}
+  footer p {{ margin: 0.3rem 0; }}
 </style>
 </head>
 <body>
@@ -128,7 +135,17 @@ def landing_page(entries: list[dict], version: str) -> str:
   <ul>
 {items}
   </ul>
-  <footer>player {html.escape(version)}</footer>
+  <section class="diy">
+    <h2>Want to make your own replays?</h2>
+    <p>The <code>session-replay</code> skill turns any Claude Code session into a page like these: it captures the transcript, helps you scope and redact it, drafts the commentary with you, and builds the page. In Claude Code:</p>
+    <pre><code>/plugin marketplace add kratsg/claude-session-replays
+/plugin install session-replay@claude-session-replays</code></pre>
+    <p>Then fork <a href="https://github.com/kratsg/claude-session-replays">the repository</a>, open Claude Code in your fork, and ask something like <em>"make a replay of my last session in ~/work/my-project"</em>. The skill stops for your review before anything is published. See the <a href="https://github.com/kratsg/claude-session-replays#readme">README</a> for the details.</p>
+  </section>
+  <footer>
+    <p>© 2026 <a href="https://github.com/kratsg">Giordon Stark</a> · code <a href="https://github.com/kratsg/claude-session-replays/blob/main/LICENSE">MIT</a> · replays <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="https://github.com/kratsg/claude-session-replays">GitHub</a> · player {html.escape(version)}</p>
+    <p>If you build on this work, keep the credit to Giordon Stark and link back to this project.</p>
+  </footer>
 </main>
 </body>
 </html>

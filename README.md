@@ -56,8 +56,35 @@ player changes, copy a tagged player into a self-contained folder next to it.
 | `session`                              | `{model, effort, client, mode}` from the transcript, shown as chips in the hero.                                                        |
 | `timezone`                             | IANA zone for the clock (e.g. `America/Chicago`); default is the viewer's zone.                                                         |
 | `setup`                                | `{intro, steps: [{label, code?, note?}]}`: how to reproduce the setup.                                                                  |
-| `stats_extra`                          | Extra `{label, value}` tiles next to the computed stats.                                                                                |
+| `stats_extra`                          | Extra `{label, value, sub?}` tiles next to the generic stats (session length, tool calls, MCP calls). Server-specific stats go here.    |
 | `chapters`                             | `[{at, title}]`: `at` is an index into `events.json`.                                                                                   |
 | `cards`                                | `[{at, title, body, image?}]`: commentary beside event `at`; `image` is `{src, alt, caption?}` with `src` relative to the story folder. |
 | `outro`                                | `{note, links: [{label, href}], image?}`.                                                                                               |
-| `poll_tools`, `poll_label`, `ff_label` | Which tools count as polling (collapsed and fast-forwarded) and how to label them.                                                      |
+| `poll_tools`, `poll_label`, `ff_label` | Opt-in: tool names whose consecutive calls collapse and fast-forward as waiting, and how to label them.                                 |
+
+## Make your own replays
+
+Install the `session-replay` skill in Claude Code:
+
+```text
+/plugin marketplace add kratsg/claude-session-replays
+/plugin install session-replay@claude-session-replays
+```
+
+Then fork this repository, open Claude Code in your fork, and ask for a replay of a
+session (for example, "make a replay of my last session in ~/work/my-project"). The skill
+(`skills/session-replay/`) captures and redacts the transcript, drafts the commentary with
+you, and stops for your review before anything is published. Three ways to pick what to
+replay: record a prompt headless, mark a span of an interactive session with
+`/replay-start` and `/replay-stop`, or point it at a finished session. Contributing a replay back
+here: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+Copyright © 2026 Giordon Stark.
+
+- Code (player, tools, skill): [MIT](LICENSE).
+- Replays (`stories/`): [CC BY 4.0](stories/LICENSE).
+
+If you build on this work, keep the credit to Giordon Stark and link back to this
+project. Every page built with the player shows that credit in its footer.

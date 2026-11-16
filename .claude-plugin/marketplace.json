@@ -1,0 +1,22 @@
+{
+  "name": "claude-session-replays",
+  "owner": {
+    "name": "Giordon Stark",
+    "url": "https://github.com/kratsg/claude-session-replays"
+  },
+  "metadata": {
+    "description": "Turn Claude Code sessions into scrollable, commented replay pages."
+  },
+  "plugins": [
+    {
+      "name": "session-replay",
+      "source": "./skills/session-replay",
+      "strict": false,
+      "description": "Capture, scope, redact and annotate a Claude Code session, and publish it as a replay page.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "homepage": "https://kratsg.github.io/claude-session-replays/",
+      "skills": ["./"]
+    }
+  ]
+}

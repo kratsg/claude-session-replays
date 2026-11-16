@@ -163,13 +163,39 @@ DEMOS = [
 
 
 def demos_html() -> str:
-    return "\n".join(
-        f"""    <figure class="term">
-      <figcaption><span class="dots"></span><b>{html.escape(title)}</b> {html.escape(caption)}</figcaption>
+    # CSS-only tabs: one radio per demo, so the page needs no script and the
+    # arrow keys move between tabs natively.
+    radios = "\n".join(
+        f'    <input type="radio" name="demo" id="demo{i}"{" checked" if i == 0 else ""}>'
+        for i in range(len(DEMOS))
+    )
+    labels = "\n".join(
+        f'      <label for="demo{i}">{html.escape(title)}</label>'
+        for i, (title, _, _) in enumerate(DEMOS)
+    )
+    panes = "\n".join(
+        f"""    <figure class="term" id="pane{i}">
+      <figcaption><span class="dots"></span>{html.escape(caption)}</figcaption>
       <pre>{body}</pre>
     </figure>"""
-        for title, caption, body in DEMOS
+        for i, (_, caption, body) in enumerate(DEMOS)
     )
+    rules = "\n".join(
+        f"  #demo{i}:checked ~ .tablist label[for=demo{i}] {{ color: var(--bg); background: var(--acc); border-color: var(--acc); }}\n"
+        f"  #demo{i}:focus-visible ~ .tablist label[for=demo{i}] {{ outline: 2px solid var(--acc); outline-offset: 2px; }}\n"
+        f"  #demo{i}:checked ~ #pane{i} {{ display: block; }}"
+        for i in range(len(DEMOS))
+    )
+    return f"""  <div class="tabs">
+  <style>
+{rules}
+  </style>
+{radios}
+    <div class="tablist">
+{labels}
+    </div>
+{panes}
+  </div>"""
 
 
 def landing_page(entries: list[dict], version: str) -> str:
@@ -213,7 +239,11 @@ def landing_page(entries: list[dict], version: str) -> str:
   .diy h3 {{ font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 1.05rem; margin: 2.2rem 0 0.4rem; }}
   .term {{ margin: 1.2rem 0; border: 1px solid var(--border); border-radius: 10px; background: #0f1318; overflow: hidden; }}
   .term figcaption {{ padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border); background: #141a21; color: var(--fg2); font-size: 0.85rem; }}
-  .term figcaption b {{ color: var(--fg); margin-right: 0.35rem; }}
+  .tabs > input {{ position: absolute; opacity: 0; pointer-events: none; }}
+  .tablist {{ display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.2rem 0 0.8rem; }}
+  .tablist label {{ cursor: pointer; padding: 0.3rem 0.85rem; border: 1px solid var(--border); border-radius: 999px; color: var(--fg2); font: 0.85rem ui-monospace, Menlo, monospace; transition: border-color 0.2s, color 0.2s; }}
+  .tablist label:hover {{ border-color: var(--acc); color: var(--fg); }}
+  .tabs .term {{ display: none; margin-top: 0; }}
   .dots {{ display: inline-block; width: 0.6rem; height: 0.6rem; margin: 0 2.1rem 0 0.1rem; border-radius: 50%; background: #ff5f57; box-shadow: 0.95rem 0 #febc2e, 1.9rem 0 #28c840; vertical-align: 0.05rem; }}
   .diy .term pre {{ margin: 0; border: 0; border-radius: 0; background: none; white-space: pre-wrap; font-size: 0.78rem; line-height: 1.55; }}
   .term .ku {{ color: var(--fg); font-weight: 600; }}
@@ -242,7 +272,7 @@ def landing_page(entries: list[dict], version: str) -> str:
     <pre><code>gh skills install kratsg/claude-session-replays session-replay --agent claude-code --scope user</code></pre>
     <p>Then fork <a href="https://github.com/kratsg/claude-session-replays">the repository</a>, open Claude Code in your fork, and ask something like <em>"make a replay of my last session in ~/work/my-project"</em>. The skill stops for your review before anything is published. See the <a href="https://github.com/kratsg/claude-session-replays#readme">README</a> for the details.</p>
     <h3>What a run looks like</h3>
-    <p>Three runs from the skill's own tests, condensed: the prompts are real, the output is trimmed.</p>
+    <p>Three runs from the skill's own tests, one per way in, condensed: the prompts are real, the output is trimmed.</p>
 {demos_html()}
   </section>
   <footer>

@@ -86,6 +86,92 @@ def load_story(folder: Path, max_schema: int) -> tuple[list, dict]:
     return events, story
 
 
+# Three condensed runs of the skill, one per way in. The prompts are the ones
+# from the skill's evals; the steps and numbers follow what those runs did.
+DEMOS = [
+    (
+        "After the fact",
+        "Point it at a finished session; it asks what is private before it extracts anything.",
+        """<span class="ku">&gt; Make a replay of the Z→ee notebook session I ran in ~/mcp-demo/zee
+  yesterday, like the other replays in this repo.</span>
+<span class="kc">⏺ Skill(session-replay)</span>
+<span class="kc">⏺ Bash(find_session.py --cwd ~/mcp-demo/zee)</span>
+<span class="kr">  ⎿ 7365cc3f  2026-11-15 21:21  claude -p · sonnet · 1 prompt</span>
+<span class="kq">⏺ Before I extract anything: what is private, the whole session or a
+  range, and which timezone should the page use?</span>
+<span class="ku">&gt; Mask my username. Knowledge-base results are internal, omit them.
+  Whole thing, Chicago time.</span>
+<span class="kc">⏺ Bash(extract_session.py session.jsonl --out events.json
+       --scope scope.json --redact local-redact.json --listing listing.txt)</span>
+<span class="kr">  ⎿ 64 events · 1 result omitted · hub URL → example.org/user/jovyan/</span>
+<span class="kt">⏺ A docs page that Claude fetched names another user's account
+  (event 27), so I masked that too.</span>
+<span class="kc">⏺ Bash(leak_scan.py events.json --local local-redact.json)</span>
+<span class="kr">  ⎿ 0 hit(s) in 1 file(s)</span>
+<span class="kc">⏺ Bash(new_story.py --slug atlas-af-zee-notebook --timezone America/Chicago …)</span>
+<span class="kc">⏺ Write(stories/2026-11-15-atlas-af-zee-notebook/story.json)</span>
+<span class="kr">  ⎿ 6 chapters · 23 cards</span>
+<span class="kc">⏺ Bash(check_story.py … &amp;&amp; pixi run lint &amp;&amp; pixi run build)</span>
+<span class="kq">⏺ Ready at localhost:8000. I left out the mass plot because it carries an
+  "ATLAS Simulation Internal" label. Nothing is committed until you say so.</span>""",
+    ),
+    (
+        "Between markers",
+        "Mark the part worth showing while you work; everything outside the markers stays out.",
+        """<span class="ku">&gt; /replay-start</span>
+<span class="kt">⏺ Recording (session-replay:start).</span>
+<span class="ku">&gt; the inventory-api healthcheck is failing in staging, can you find out why?</span>
+<span class="kc">⏺ Bash(kubectl get pods -n staging)</span>
+<span class="kd">  … six tool calls, one fix, the rollout comes back healthy …</span>
+<span class="ku">&gt; /replay-stop</span>
+<span class="ku">&gt; Turn that part into a replay.</span>
+<span class="kc">⏺ Skill(session-replay)</span>
+<span class="kc">⏺ Bash(extract_session.py session.jsonl --out events.json --listing listing.txt)</span>
+<span class="kr">  ⎿ markers: rows 3..18 · 11 events (1 prompt, 4 texts, 6 tool calls)</span>
+<span class="kt">⏺ Everything before /replay-start is dropped, including the prompt where
+  you loaded an env file with a deploy key.</span>
+<span class="kq">⏺ What else here is private?</span>
+<span class="ku">&gt; My username, my colleague's name, anything on our corp domains,
+  and anything that looks like a credential.</span>
+<span class="kc">⏺ Bash(leak_scan.py events.json --local local-redact.json)</span>
+<span class="kr">  ⎿ 0 hit(s) in 1 file(s)</span>
+<span class="kq">⏺ Masked: your username, your colleague's name and email ("a colleague"),
+  the corp domains, the pod IPs, a database password and a GitHub token.
+  Here is the listing. Shall I write the commentary?</span>""",
+    ),
+    (
+        "Any coding session",
+        "Nothing about it is specific to one domain: a plain session with no MCP servers works too.",
+        """<span class="ku">&gt; Turn my wordfreq coding session into a replay page so I can show
+  students how Claude Code works through a small task with tests.</span>
+<span class="kc">⏺ Skill(session-replay)</span>
+<span class="kc">⏺ Bash(find_session.py --cwd /tmp/wordfreq-demo)</span>
+<span class="kq">⏺ What is private, and should I use the whole session?</span>
+<span class="ku">&gt; Just my username. Whole thing.</span>
+<span class="kc">⏺ Bash(extract_session.py session.jsonl --out events.json --listing listing.txt)</span>
+<span class="kr">  ⎿ 15 events (1 prompt, 5 texts, 9 tool calls)</span>
+<span class="kt">⏺ I kept the file names in the temp paths, so the pytest traceback
+  still says which test file failed.</span>
+<span class="kc">⏺ Write(stories/2026-11-15-wordfreq-tdd/story.json)</span>
+<span class="kr">  ⎿ 5 chapters · 11 cards: red then green, why silent output isn't a
+    pass, exit status 127, deterministic tie-breaks</span>
+<span class="kc">⏺ Bash(check_story.py … &amp;&amp; pixi run lint &amp;&amp; pixi run build)</span>
+<span class="kq">⏺ Ready for your review. No MCP servers here, so the page shows no polling
+  or service tiles, only the run's own numbers ("10 passed in 0.34 s").</span>""",
+    ),
+]
+
+
+def demos_html() -> str:
+    return "\n".join(
+        f"""    <figure class="term">
+      <figcaption><span class="dots"></span><b>{html.escape(title)}</b> {html.escape(caption)}</figcaption>
+      <pre>{body}</pre>
+    </figure>"""
+        for title, caption, body in DEMOS
+    )
+
+
 def landing_page(entries: list[dict], version: str) -> str:
     items = "\n".join(
         f"""      <li>
@@ -124,6 +210,18 @@ def landing_page(entries: list[dict], version: str) -> str:
   .diy a, footer a {{ display: inline; padding: 0; border: 0; color: var(--acc); }}
   .diy pre {{ overflow-x: auto; background: #10141a; border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.85rem; }}
   code {{ font-family: ui-monospace, Menlo, monospace; }}
+  .diy h3 {{ font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 1.05rem; margin: 2.2rem 0 0.4rem; }}
+  .term {{ margin: 1.2rem 0; border: 1px solid var(--border); border-radius: 10px; background: #0f1318; overflow: hidden; }}
+  .term figcaption {{ padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border); background: #141a21; color: var(--fg2); font-size: 0.85rem; }}
+  .term figcaption b {{ color: var(--fg); margin-right: 0.35rem; }}
+  .dots {{ display: inline-block; width: 0.6rem; height: 0.6rem; margin: 0 2.1rem 0 0.1rem; border-radius: 50%; background: #ff5f57; box-shadow: 0.95rem 0 #febc2e, 1.9rem 0 #28c840; vertical-align: 0.05rem; }}
+  .diy .term pre {{ margin: 0; border: 0; border-radius: 0; background: none; white-space: pre-wrap; font-size: 0.78rem; line-height: 1.55; }}
+  .term .ku {{ color: var(--fg); font-weight: 600; }}
+  .term .kc {{ color: var(--acc); }}
+  .term .kr, .term .kd {{ color: var(--fg2); }}
+  .term .kd {{ font-style: italic; }}
+  .term .kt {{ color: #c9cdd2; }}
+  .term .kq {{ color: #f0c674; }}
   footer {{ margin-top: 3rem; color: var(--fg2); font-size: 0.8rem; font-family: ui-monospace, Menlo, monospace; }}
   footer p {{ margin: 0.3rem 0; }}
 </style>
@@ -140,7 +238,12 @@ def landing_page(entries: list[dict], version: str) -> str:
     <p>The <code>session-replay</code> skill turns any Claude Code session into a page like these: it captures the transcript, helps you scope and redact it, drafts the commentary with you, and builds the page. In Claude Code:</p>
     <pre><code>/plugin marketplace add kratsg/claude-session-replays
 /plugin install session-replay@claude-session-replays</code></pre>
+    <p>Or with the GitHub CLI (any agent it supports; without the plugin, type <code>session-replay:start</code> and <code>session-replay:stop</code> instead of the <code>/replay-start</code> and <code>/replay-stop</code> commands):</p>
+    <pre><code>gh skills install kratsg/claude-session-replays session-replay --agent claude-code --scope user</code></pre>
     <p>Then fork <a href="https://github.com/kratsg/claude-session-replays">the repository</a>, open Claude Code in your fork, and ask something like <em>"make a replay of my last session in ~/work/my-project"</em>. The skill stops for your review before anything is published. See the <a href="https://github.com/kratsg/claude-session-replays#readme">README</a> for the details.</p>
+    <h3>What a run looks like</h3>
+    <p>Three runs from the skill's own tests, condensed: the prompts are real, the output is trimmed.</p>
+{demos_html()}
   </section>
   <footer>
     <p>© 2026 <a href="https://giordonstark.com/">Giordon Stark</a> · code <a href="https://github.com/kratsg/claude-session-replays/blob/main/LICENSE">MIT</a> · replays <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="https://github.com/kratsg/claude-session-replays">GitHub</a> · player {html.escape(version)}</p>
@@ -202,5 +305,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    <p>Or with the GitHub CLI (any agent it supports; without the plugin, type <code>session-replay:start</code> and <code>session-replay:stop</code> instead of the <code>/replay-start</code> and <code>/replay-stop</code> commands):</p>
-    <pre><code>gh skills install kratsg/claude-session-replays session-replay --agent claude-code --scope user</code></pre>

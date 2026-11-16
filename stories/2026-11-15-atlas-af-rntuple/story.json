@@ -29,6 +29,11 @@
   },
   "stats_extra": [
     {
+      "label": "atlas-af services used",
+      "value": "2",
+      "sub": "aos · condor"
+    },
+    {
       "label": "Data converted",
       "value": "32.37 GB → 9.22 GB"
     },
@@ -155,5 +160,13 @@
       }
     ]
   },
-  "timezone": "America/Chicago"
+  "timezone": "America/Chicago",
+  "poll_tools": [
+    "condor_check_watches",
+    "condor_query_jobs",
+    "condor_watch_jobs",
+    "condor_get_job"
+  ],
+  "poll_label": "checked on the batch jobs",
+  "ff_label": "batch jobs"
 }

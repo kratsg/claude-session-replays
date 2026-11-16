@@ -1523,3 +1523,14 @@ body.static *::after {
 .session-chips .v {
   color: var(--fg);
 }
+
+/* Attribution line in the outro. */
+.credit {
+  margin: 1.6rem 0 0;
+  color: var(--fg2);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+.credit a {
+  color: inherit;
+}

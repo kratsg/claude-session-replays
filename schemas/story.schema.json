@@ -69,6 +69,10 @@
           "value": {
             "type": "string",
             "minLength": 1
+          },
+          "sub": {
+            "type": "string",
+            "description": "Small line under the value, e.g. a list of names."
           }
         }
       }
@@ -148,7 +152,7 @@
     },
     "poll_tools": {
       "type": "array",
-      "description": "MCP tool names (without the mcp__<server>__ prefix) whose consecutive calls collapse into one waiting line.",
+      "description": "MCP tool names (without the mcp__<server>__ prefix) whose consecutive calls collapse into one waiting line and fast-forward. Opt-in: the player assumes no particular server.",
       "items": {
         "type": "string",
         "minLength": 1

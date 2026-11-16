@@ -21,16 +21,12 @@
   var FROM = params.has('from') ? parseInt(params.get('from'), 10) : null;
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Tool-name suffixes (after mcp__<server>__) that count as "checking on jobs".
-  // story.poll_tools / story.poll_label override these for other sessions.
-  var DEFAULT_POLL_TOOLS = [
-    'condor_check_watches',
-    'condor_query_jobs',
-    'condor_watch_jobs',
-    'condor_get_job',
-  ];
-  var DEFAULT_POLL_LABEL = 'checked on the batch jobs';
-  var DEFAULT_FF_LABEL = 'batch jobs';
+  // Polling is opt-in per story: story.poll_tools lists the tool names (after
+  // mcp__<server>__) whose runs collapse into one "waiting" line; the player
+  // assumes no particular MCP server.
+  var DEFAULT_POLL_TOOLS = [];
+  var DEFAULT_POLL_LABEL = 'checked on progress';
+  var DEFAULT_FF_LABEL = 'waiting';
   var POLL_MIN = 3;
   var GAP_DIVIDER_S = 120;
   var MAX_STEP_S = 1.2; // longest pause between two revealed items at 1×
@@ -412,26 +408,26 @@
     var tools = m.events.filter(function (e) {
       return e.kind === 'tool';
     });
-    var services = new Set();
-    var serverCalls = 0;
+    // Generic MCP stats; anything specific to one server (e.g. its services)
+    // belongs in the story's stats_extra.
+    var servers = new Set();
+    var mcpCalls = 0;
     tools.forEach(function (e) {
       var p = mcpParts(e.name);
-      if (p && p.server === m.server) {
-        serverCalls++;
-        services.add(p.tool.split('_')[0]);
+      if (p) {
+        mcpCalls++;
+        servers.add(p.server);
       }
     });
-    var svc = Array.from(services).sort();
     var stats = [
       { label: 'Session length', value: humanSpan(workSeconds(m)) },
       { label: 'Tool calls', value: String(tools.length) },
     ];
-    if (m.server) {
-      stats.push({ label: m.server + ' calls', value: String(serverCalls) });
+    if (mcpCalls) {
       stats.push({
-        label: m.server + ' services used',
-        value: String(svc.length),
-        sub: svc.join(' · '),
+        label: 'MCP calls',
+        value: String(mcpCalls),
+        sub: Array.from(servers).sort().join(' · '),
       });
     }
     return stats.concat(m.story.stats_extra || []);
@@ -595,6 +591,19 @@
       });
       inner.appendChild(ul);
     }
+    // Attribution travels with every site built from this player (MIT notice).
+    var credit = el('p', 'credit');
+    var repo = el('a', null, 'claude-session-replays');
+    repo.href = 'https://github.com/kratsg/claude-session-replays';
+    repo.target = '_blank';
+    repo.rel = 'noopener noreferrer';
+    append(
+      credit,
+      document.createTextNode('made with '),
+      repo,
+      document.createTextNode(' · player ' + PLAYER_VERSION + ' © Giordon Stark, MIT'),
+    );
+    inner.appendChild(credit);
     var top = el('a', 'to-top', '↑ back to the top');
     top.href = '#top';
     inner.appendChild(top);

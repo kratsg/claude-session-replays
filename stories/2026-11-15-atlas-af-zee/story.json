@@ -31,6 +31,11 @@
   },
   "stats_extra": [
     {
+      "label": "atlas-af services used",
+      "value": "5",
+      "sub": "af · ami · aos · jhub · rucio"
+    },
+    {
       "label": "Fitted Z peak",
       "value": "91.01 ± 0.08 GeV"
     },

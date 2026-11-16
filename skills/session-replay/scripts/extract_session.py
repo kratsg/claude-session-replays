@@ -55,6 +55,15 @@ MAXLEN = 6000
 DEFAULT_REDACT = [
     (r"/Users/[^/\s\"'\\]+", "/home/jovyan"),
     (r"/home/(?!jovyan\b)[^/\s\"'\\]+", "/home/jovyan"),
+    # Temp directories hide usernames and session IDs; a trailing file name
+    # (anything with an extension) is kept so tracebacks still say which file.
+    (
+        (
+            r"(?:/private/tmp|/var/folders|/tmp/claude-\d+)/(?:[^\s\"'\\]*/)?"
+            r"(?=[\w-]+\.\w+(?![\w./-]))"
+        ),
+        "/tmp/scratch/",
+    ),
     (r"/private/tmp/[^\s\"'\\]*", "/tmp/scratch"),
     (r"(?:/var/folders|/tmp/claude-\d+)/[^\s\"'\\]*", "/tmp/scratch"),
     (r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", "REDACTED-JWT"),
@@ -64,7 +73,13 @@ DEFAULT_REDACT = [
         "REDACTED-TOKEN",
     ),
     (r"\bAKIA[0-9A-Z]{16}\b", "REDACTED-KEY"),
-    (r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "jovyan@example.org"),
+    # Neutral, so a colleague's address is not shown as the user's; map the
+    # user's own address to jovyan@example.org with a local pattern (example.org
+    # addresses are left alone so that mapping survives).
+    (
+        r"[A-Za-z0-9._%+-]+@(?!example\.org\b)[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
+        "someone@example.org",
+    ),
     (
         r"https?://jupyterhub\.[\w.-]+/user/[^/\s\"'\\]+/",
         "https://example.org/user/jovyan/",
@@ -166,6 +181,8 @@ def extract(rows, scope, redact):
         if r.get("isSidechain"):
             continue  # a subagent's own transcript; its call and result appear in the parent
         kind = r.get("type")
+        if kind == "user" and r.get("isMeta"):
+            continue  # injected by the harness (skill text, caveats), not typed
         if kind == "queue-operation" and r.get("operation") == "enqueue":
             events.append(
                 {

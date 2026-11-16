@@ -30,6 +30,10 @@ jobs:
       - name: lint
         run: pixi run lint
 
+      # Unit tests for the session-replay skill's scripts.
+      - name: test
+        run: pixi run test
+
       # Validates every story against schemas/, then builds. Fails on a story
       # whose schema is newer than the player, or whose anchors point outside
       # its events.

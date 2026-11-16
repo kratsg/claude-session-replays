@@ -35,6 +35,7 @@ pixi run validate   # check every story.json / events.json against schemas/
 pixi run build      # validate, then build _site/
 pixi run serve      # build, then serve http://localhost:8000
 pixi run lint       # every pre-commit hook on the whole repo
+pixi run test       # unit tests for the skill's scripts
 ```
 
 Each `_site/<story>/` folder is self-contained (the player, the story and a `data.js`), so it

@@ -19,6 +19,7 @@ pixi run validate   # story.json / events.json against schemas/
 pixi run build      # validate, then build _site/
 pixi run serve      # build, then serve http://localhost:8000
 pixi run lint       # every pre-commit hook (prek): prettier, biome, ruff, codespell, schemas, zizmor
+pixi run test       # pytest for the skill's scripts (tests/)
 pixi run release X.Y.Z   # bump PLAYER_VERSION, commit, tag player-vX.Y.Z (tbump)
 ```
 
@@ -51,6 +52,6 @@ pixi run release X.Y.Z   # bump PLAYER_VERSION, commit, tag player-vX.Y.Z (tbump
 - **The player is plain browser JavaScript** in ES5 style, loaded without a bundler;
   keep it that way (see `biome.jsonc` for which lint rules are off and why). Insert
   event content with `textContent`; only agent Markdown goes through marked + DOMPurify.
-- **Before committing:** `pixi run lint` and `pixi run build` must pass.
+- **Before committing:** `pixi run lint`, `pixi run test` and `pixi run build` must pass.
 - **Commits** follow Conventional Commits. Credit AI help with an
   `Assisted-by: <tool> (<vendor>)` trailer; see `CONTRIBUTING.md`.

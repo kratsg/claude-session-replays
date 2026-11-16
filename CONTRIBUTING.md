@@ -9,6 +9,7 @@ Install [pixi](https://pixi.sh), then:
 
 ```bash
 pixi run lint    # all checks (also installs the git hooks' environments)
+pixi run test    # unit tests for the skill's scripts
 pixi run serve   # http://localhost:8000
 ```
 

@@ -20,6 +20,12 @@ only be dropped or replaced with text you supply, and nothing is invented.
 Usage:
     extract_session.py SESSION.jsonl --out events.json [--scope scope.json]
                        [--redact local-redact.json] [--listing listing.txt]
+                       [--redact-level full|light|none]
+
+Redact levels: "full" and "light" apply every default (light only skips the
+manual review in the skill's workflow); "none" masks credentials only, leaving
+usernames, paths, emails and addresses as they are. Local patterns apply at
+every level.
 
 scope.json (all keys optional):
     {
@@ -52,7 +58,21 @@ MAXLEN = 6000
 # Generic defaults. Placeholders are plain words on purpose: the player renders
 # Claude's text as sanitized Markdown, which deletes anything shaped like an
 # HTML tag, so "<user>" would silently vanish from the page.
-DEFAULT_REDACT = [
+
+# Credentials: masked at every redaction level, because masking them costs
+# nothing and publishing one is expensive to undo.
+SECRET_REDACT = [
+    (r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", "REDACTED-JWT"),
+    (r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{12,}", r"\1REDACTED-TOKEN"),
+    (
+        r"\b(?:ghp|gho|ghs|github_pat|glpat|sk|xox[abp])[-_][A-Za-z0-9_-]{16,}",
+        "REDACTED-TOKEN",
+    ),
+    (r"\bAKIA[0-9A-Z]{16}\b", "REDACTED-KEY"),
+]
+
+# Who and where: users, paths, addresses, account IDs. Skipped at level "none".
+IDENTITY_REDACT = [
     (r"/Users/[^/\s\"'\\]+", "/home/jovyan"),
     (r"/home/(?!jovyan\b)[^/\s\"'\\]+", "/home/jovyan"),
     # Temp directories hide usernames and session IDs; a trailing file name
@@ -66,13 +86,6 @@ DEFAULT_REDACT = [
     ),
     (r"/private/tmp/[^\s\"'\\]*", "/tmp/scratch"),
     (r"(?:/var/folders|/tmp/claude-\d+)/[^\s\"'\\]*", "/tmp/scratch"),
-    (r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", "REDACTED-JWT"),
-    (r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]{12,}", r"\1REDACTED-TOKEN"),
-    (
-        r"\b(?:ghp|gho|ghs|github_pat|glpat|sk|xox[abp])[-_][A-Za-z0-9_-]{16,}",
-        "REDACTED-TOKEN",
-    ),
-    (r"\bAKIA[0-9A-Z]{16}\b", "REDACTED-KEY"),
     # Neutral, so a colleague's address is not shown as the user's; map the
     # user's own address to jovyan@example.org with a local pattern (example.org
     # addresses are left alone so that mapping survives).
@@ -127,8 +140,19 @@ def ts(s):
     return datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()  # noqa: FURB162
 
 
-def compile_rules(local_path):
-    rules = list(DEFAULT_REDACT)
+# "light" masks the same as "full"; it differs only in the skill's workflow
+# (no manual privacy review).
+REDACT_LEVELS = {
+    "full": SECRET_REDACT + IDENTITY_REDACT,
+    "light": SECRET_REDACT + IDENTITY_REDACT,
+    "none": SECRET_REDACT,
+}
+
+
+def compile_rules(local_path, level="full"):
+    if level not in REDACT_LEVELS:
+        raise ValueError(f"unknown redact level {level!r}: use {sorted(REDACT_LEVELS)}")
+    rules = list(REDACT_LEVELS[level])
     if local_path:
         extra = json.loads(Path(local_path).read_text(encoding="utf-8"))
         # Local patterns run first: they are the most specific (usernames,
@@ -350,6 +374,12 @@ def main():
         "--redact", help="local redaction patterns (JSON); keep it out of git"
     )
     ap.add_argument("--listing", help="also write a numbered event listing for review")
+    ap.add_argument(
+        "--redact-level",
+        choices=sorted(REDACT_LEVELS),
+        default="full",
+        help="none masks credentials only (default: full)",
+    )
     args = ap.parse_args()
 
     rows = [
@@ -360,7 +390,7 @@ def main():
     scope = (
         json.loads(Path(args.scope).read_text(encoding="utf-8")) if args.scope else {}
     )
-    redact = make_redactor(compile_rules(args.redact))
+    redact = make_redactor(compile_rules(args.redact, args.redact_level))
     events = redact_events(apply_scope(extract(rows, scope, redact), scope), redact)
     if not events:
         sys.exit("no events in the selected range")

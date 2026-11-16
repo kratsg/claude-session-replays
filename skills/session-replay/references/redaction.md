@@ -4,6 +4,24 @@ A replay is published on the open web, often permanently: a force-push does not 
 an old commit from GitHub, and the old commit stays reachable by its SHA until GitHub
 garbage-collects it or Support purges it. Get redaction right before the first push.
 
+## Levels
+
+The user picks one up front (`--redact-level` on `extract_session.py` and
+`leak_scan.py`):
+
+| Level   | Automatic masking      | Leak scan checks       | Manual review |
+| ------- | ---------------------- | ---------------------- | ------------- |
+| `full`  | credentials + identity | credentials + identity | yes           |
+| `light` | credentials + identity | credentials + identity | no            |
+| `none`  | credentials only       | credentials only       | no            |
+
+Credentials (JWTs, bearer and API tokens, cloud keys) are masked at every level: it
+costs nothing and a published token is expensive to revoke. Local patterns apply at every
+level. Everything below describes `full`; at `light` skip the "What to look for" hunt and
+the privacy question at review gate 1; at `none` skip the identity layer too. If a
+lighter level is chosen for a story that will be public, say once what it will leave
+visible (usernames, home paths, hosts) so the choice is informed.
+
 ## Three layers
 
 1. **Generic defaults** in `scripts/extract_session.py`: home and temp paths (a trailing

@@ -71,3 +71,35 @@ class TestTempPaths:
 class TestHomePaths:
     def test_macos_home_becomes_jovyan(self, redact):
         assert redact("/Users/alice/work/x.py") == "/home/jovyan/work/x.py"
+
+
+class TestRedactLevels:
+    SAMPLE = (
+        "/Users/alice/x.py alice@uni.edu ghp_AbCdEfGhIjKlMnOpQrStUv "
+        "Authorization: Bearer abcdefghijklmnop1234"
+    )
+
+    def redactor(self, level):
+        return extract_session.make_redactor(extract_session.compile_rules(None, level))
+
+    def test_light_masks_the_same_as_full(self):
+        assert self.redactor("light")(self.SAMPLE) == self.redactor("full")(self.SAMPLE)
+
+    def test_none_keeps_identity_but_masks_secrets(self):
+        out = self.redactor("none")(self.SAMPLE)
+        assert "/Users/alice/x.py" in out
+        assert "alice@uni.edu" in out
+        assert "ghp_" not in out
+        assert "abcdefghijklmnop1234" not in out
+
+    def test_none_still_applies_local_patterns(self, tmp_path):
+        local = tmp_path / "local-redact.json"
+        local.write_text(json.dumps({"patterns": [["alice", "jovyan"]]}))
+        redact = extract_session.make_redactor(
+            extract_session.compile_rules(local, "none")
+        )
+        assert redact("/Users/alice") == "/Users/jovyan"
+
+    def test_unknown_level_is_rejected(self):
+        with pytest.raises(ValueError, match="redact level"):
+            extract_session.compile_rules(None, "partial")

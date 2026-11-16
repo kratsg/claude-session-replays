@@ -7,6 +7,7 @@ scanned for). Review every hit: either fix the redaction and re-extract, or
 confirm the hit is meant to be public.
 
 Usage: leak_scan.py FILE [FILE ...] [--local local-redact.json] [--allow REGEX ...]
+                   [--redact-level full|light|none]
 """
 
 import argparse
@@ -15,19 +16,40 @@ import re
 import sys
 from pathlib import Path
 
-CHECKS = {
+# Checked at every redaction level (see extract_session.py --redact-level).
+SECRET_CHECKS = {
+    "jwt": r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+",
+    "bearer token": r"(?i)bearer\s+(?!REDACTED)[A-Za-z0-9._~+/=-]{12,}",
+    "api token": r"\b(?:ghp|gho|ghs|github_pat|glpat|sk|xox[abp])[-_][A-Za-z0-9_-]{16,}",
+    "aws key": r"\bAKIA[0-9A-Z]{16}\b",
+}
+
+# Skipped at level "none", where the user chose to leave these as they are.
+IDENTITY_CHECKS = {
     "ipv4 address": r"\b(?!x\.x)\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b",
     "email address": r"[A-Za-z0-9._%+-]+@(?!example\.org)[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
     "macOS home path": r"/Users/[^/\s\"]+",
     "home path": r"/home/(?!jovyan\b)[^/\s\"]+",
     "temp path": r"/private/tmp/|/var/folders/",
-    "jwt": r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+",
-    "bearer token": r"(?i)bearer\s+(?!REDACTED)[A-Za-z0-9._~+/=-]{12,}",
-    "api token": r"\b(?:ghp|gho|ghs|github_pat|glpat|sk|xox[abp])[-_][A-Za-z0-9_-]{16,}",
-    "aws key": r"\bAKIA[0-9A-Z]{16}\b",
     "hub user url": r"/user/(?!jovyan/)[^/\s\"]+/(?:lab|tree|api)",
     "html-like placeholder": r"(?<![\w`])<(?:user|name|host|ip|token|email|path)>",
 }
+
+
+def checks_for(level):
+    if level == "none":
+        return dict(SECRET_CHECKS)
+    return {**SECRET_CHECKS, **IDENTITY_CHECKS}
+
+
+def scan(text, checks):
+    """[(check name, sorted distinct hits)] for every check that matches."""
+    out = []
+    for name, pat in checks.items():
+        found = sorted({m.group(0) for m in re.finditer(pat, text)} - {""})
+        if found:
+            out.append((name, found))
+    return out
 
 
 def main():
@@ -39,9 +61,15 @@ def main():
     ap.add_argument(
         "--allow", action="append", default=[], help="regex of hits to accept"
     )
+    ap.add_argument(
+        "--redact-level",
+        choices=["full", "light", "none"],
+        default="full",
+        help="the level extract_session.py used; none checks credentials only",
+    )
     args = ap.parse_args()
 
-    checks = dict(CHECKS)
+    checks = checks_for(args.redact_level)
     if args.local:
         for i, (pat, _) in enumerate(
             json.loads(Path(args.local).read_text(encoding="utf-8"))["patterns"]
@@ -51,8 +79,7 @@ def main():
     hits = 0
     for f in args.files:
         text = Path(f).read_text(encoding="utf-8", errors="replace")
-        for name, pat in checks.items():
-            found = sorted({m.group(0) for m in re.finditer(pat, text)} - {""})
+        for name, found in scan(text, checks):
             found = [h for h in found if not any(a.search(h) for a in allow)]
             if found:
                 hits += len(found)

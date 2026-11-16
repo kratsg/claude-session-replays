@@ -52,13 +52,25 @@ Ask the user, before anything else:
    finished session (`scripts/find_session.py --cwd <dir>` lists a directory's sessions;
    [references/transcript-format.md](references/transcript-format.md) explains where they
    live).
-2. **What is private?** Their usernames and email, colleagues, hosts, projects, internal
-   documents. They know; you don't, but you can spot candidates: other people's account
-   names in fetched pages or file listings, and IDs or links of internal documents. Write their answers into `local-redact.json` and `scope.json`
+2. **How much redaction?** Offer three levels and let the user pick; the manual privacy
+   review is the slow part, and not every session needs it:
+   - **full** (the default for anything published): automatic defaults, then the
+     privacy questions and manual review below.
+   - **light**: automatic defaults and the leak scan only; skip the questions and the
+     manual hunt. For sessions the user knows hold nothing sensitive.
+   - **none**: leave usernames, paths, emails and addresses as they are. Credentials
+     (tokens, keys) are still masked at every level.
+
+   Pass the level to `extract_session.py` and `leak_scan.py` with `--redact-level`.
+
+3. **What is private?** (full only) Their usernames and email, colleagues, hosts,
+   projects, internal documents. They know; you don't, but you can spot candidates: other
+   people's account names in fetched pages or file listings, and IDs or links of internal
+   documents. Write their answers into `local-redact.json` and `scope.json`
    (see [references/redaction.md](references/redaction.md)).
-3. **Which part of the session?** The whole thing, or certain turns. Side quests the
+4. **Which part of the session?** The whole thing, or certain turns. Side quests the
    reader doesn't need are dropped with scope rules, not by hand-editing events.
-4. **Extra context?** Logs or docs that help explain the steps. Optional; see
+5. **Extra context?** Logs or docs that help explain the steps. Optional; see
    [references/extra-context.md](references/extra-context.md).
 
 ## 1. Capture (only for a new recording)
@@ -73,16 +85,19 @@ jobs) as the user decides. Details: [references/transcript-format.md](references
 ```bash
 python3 <skill>/scripts/extract_session.py SESSION.jsonl --out /tmp/replay/events.json \
   --scope /tmp/replay/scope.json --redact /tmp/replay/local-redact.json \
-  --listing /tmp/replay/listing.txt
-python3 <skill>/scripts/leak_scan.py /tmp/replay/events.json --local /tmp/replay/local-redact.json
+  --listing /tmp/replay/listing.txt --redact-level full
+python3 <skill>/scripts/leak_scan.py /tmp/replay/events.json --local /tmp/replay/local-redact.json \
+  --redact-level full
 ```
 
 Iterate on `scope.json` until the listing tells the story the user wants: drop side
 quests, abridge prompts only with the user's wording, restore missing text only from a
-verbatim copy. Then read every leak-scan hit, and skim the large tool results yourself.
+verbatim copy. Then read every leak-scan hit; at level full, also skim the large tool
+results yourself.
 
 **Review gate 1:** show the user the listing and the scan output, say what you dropped
-and masked, and ask what else is private. Do not continue until they agree.
+and masked, and (at level full) ask what else is private. Do not continue until they
+agree.
 
 ## 3. Create the story
 
@@ -134,7 +149,7 @@ or rewrite published history without the user's explicit approval.
 
 ## Checklist
 
-- [ ] Session, private details, scope and extra context agreed with the user
+- [ ] Session, redaction level, private details (full), scope and extra context agreed
 - [ ] `events.json` extracted with local patterns and scope rules; leak scan read in full
 - [ ] Review gate 1 passed
 - [ ] Story folder created with `new_story.py`

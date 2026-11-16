@@ -3,6 +3,12 @@
   "schema": 1,
   "title": "TTree → RNTuple on the ATLAS AF",
   "subtitle": "A real Claude Code session that converts 32 GB of analysis ntuples on the UChicago Analysis Facility, entirely through the atlas-af MCP server.",
+  "session": {
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "client": "Claude Code 2.1.325",
+    "mode": "interactive"
+  },
   "setup": {
     "intro": "atlas-af is one MCP endpoint in front of the facility's services: ATLAS knowledge search, HTCondor, JupyterHub, Rucio, AMI and more. You log in with your AF account; the gateway acts with your own credentials, so Claude never holds them.",
     "steps": [

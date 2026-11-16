@@ -7,10 +7,20 @@
   "additionalProperties": false,
   "required": ["schema", "title", "chapters", "cards"],
   "properties": {
-    "$schema": { "type": "string" },
-    "schema": { "const": 1, "description": "Story schema version; the player refuses a newer one." },
-    "title": { "type": "string", "minLength": 1 },
-    "subtitle": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
+    "schema": {
+      "const": 1,
+      "description": "Story schema version; the player refuses a newer one."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subtitle": {
+      "type": "string"
+    },
     "timezone": {
       "type": "string",
       "description": "IANA zone for clock times, e.g. America/Chicago. Default: the viewer's zone.",
@@ -20,7 +30,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "intro": { "type": "string" },
+        "intro": {
+          "type": "string"
+        },
         "steps": {
           "type": "array",
           "items": {
@@ -28,9 +40,16 @@
             "additionalProperties": false,
             "required": ["label"],
             "properties": {
-              "label": { "type": "string", "minLength": 1 },
-              "code": { "type": "string" },
-              "note": { "type": "string" }
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
             }
           }
         }
@@ -43,8 +62,14 @@
         "additionalProperties": false,
         "required": ["label", "value"],
         "properties": {
-          "label": { "type": "string", "minLength": 1 },
-          "value": { "type": "string", "minLength": 1 }
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -56,8 +81,13 @@
         "additionalProperties": false,
         "required": ["at", "title"],
         "properties": {
-          "at": { "$ref": "#/$defs/eventIndex" },
-          "title": { "type": "string", "minLength": 1 }
+          "at": {
+            "$ref": "#/$defs/eventIndex"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -68,10 +98,21 @@
         "additionalProperties": false,
         "required": ["at", "title", "body"],
         "properties": {
-          "at": { "$ref": "#/$defs/eventIndex" },
-          "title": { "type": "string", "minLength": 1 },
-          "body": { "type": "string", "minLength": 1, "description": "Plain text; `backticks` render as code." },
-          "image": { "$ref": "#/$defs/image" }
+          "at": {
+            "$ref": "#/$defs/eventIndex"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Plain text; `backticks` render as code."
+          },
+          "image": {
+            "$ref": "#/$defs/image"
+          }
         }
       }
     },
@@ -79,8 +120,12 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "note": { "type": "string" },
-        "image": { "$ref": "#/$defs/image" },
+        "note": {
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
         "links": {
           "type": "array",
           "items": {
@@ -88,8 +133,14 @@
             "additionalProperties": false,
             "required": ["label", "href"],
             "properties": {
-              "label": { "type": "string", "minLength": 1 },
-              "href": { "type": "string", "pattern": "^https?://" }
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "href": {
+                "type": "string",
+                "pattern": "^https?://"
+              }
             }
           }
         }
@@ -98,13 +149,47 @@
     "poll_tools": {
       "type": "array",
       "description": "MCP tool names (without the mcp__<server>__ prefix) whose consecutive calls collapse into one waiting line.",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
-    "poll_label": { "type": "string" },
-    "ff_label": { "type": "string" }
+    "poll_label": {
+      "type": "string"
+    },
+    "ff_label": {
+      "type": "string"
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "How the session was run, taken from the transcript: shown as chips in the hero.",
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Model ID, e.g. claude-opus-5-5."
+        },
+        "effort": {
+          "type": "string",
+          "description": "Reasoning effort level, e.g. medium."
+        },
+        "client": {
+          "type": "string",
+          "description": "Client and version, e.g. Claude Code 2.1.325."
+        },
+        "mode": {
+          "type": "string",
+          "description": "How it was driven, e.g. interactive or headless (claude -p)."
+        }
+      }
+    }
   },
   "$defs": {
-    "eventIndex": { "type": "integer", "minimum": 0 },
+    "eventIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
     "image": {
       "type": "object",
       "additionalProperties": false,
@@ -115,8 +200,13 @@
           "description": "Path relative to the story folder, e.g. assets/plot.png.",
           "pattern": "^(?!.*\\.\\.)[A-Za-z0-9_][A-Za-z0-9_./-]*$"
         },
-        "alt": { "type": "string", "minLength": 1 },
-        "caption": { "type": "string" }
+        "alt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string"
+        }
       }
     }
   }

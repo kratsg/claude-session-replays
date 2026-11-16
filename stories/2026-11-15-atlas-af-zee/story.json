@@ -3,6 +3,12 @@
   "schema": 1,
   "title": "Z → ee in one prompt on the ATLAS AF",
   "subtitle": "One prompt to Claude Code (Sonnet). Under four minutes later there is a tutorial notebook on the UChicago AF that finds an ATLAS Run 3 sample, streams it from the facility cache and fits the Z peak.",
+  "session": {
+    "model": "claude-sonnet-5-5",
+    "effort": "medium",
+    "client": "Claude Code 2.1.325",
+    "mode": "headless (claude -p)"
+  },
   "timezone": "America/Chicago",
   "setup": {
     "intro": "atlas-af is one MCP endpoint in front of the facility's services: ATLAS knowledge search, AMI, Rucio, JupyterHub, HTCondor and more. You log in with your AF account; the gateway acts with your own credentials, so Claude never holds them.",

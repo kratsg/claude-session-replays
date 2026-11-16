@@ -11,7 +11,10 @@
     "properties": {
       "kind": { "enum": ["prompt", "interject", "text", "tool"] },
       "t": { "type": "number" },
-      "row": { "type": "integer", "description": "Line in the source transcript (provenance only)." }
+      "row": {
+        "type": "integer",
+        "description": "Line in the source transcript (provenance only)."
+      }
     },
     "oneOf": [
       {
@@ -23,7 +26,10 @@
         "required": ["text"]
       },
       {
-        "properties": { "kind": { "const": "text" }, "text": { "type": "string" } },
+        "properties": {
+          "kind": { "const": "text" },
+          "text": { "type": "string" }
+        },
         "required": ["text"]
       },
       {

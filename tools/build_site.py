@@ -16,18 +16,22 @@ Usage:
 """
 
 import argparse
+import datetime
 import html
 import json
 import re
 import shutil
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 PLAYER = ROOT / "player"
 STORIES = ROOT / "stories"
 SITE = ROOT / "_site"
 PLAYER_FILES = ("index.html", "style.css", "app.js")
+# Story folders are named like blog posts, YYYY-MM-DD-<slug>, so they sort by date.
+FOLDER_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 def as_js(value: object) -> str:
@@ -66,16 +70,30 @@ def load_story(folder: Path, max_schema: int) -> tuple[list, dict]:
     for ref in story.get("chapters", []) + story.get("cards", []):
         if not 0 <= ref["at"] < n:
             sys.exit(f"{folder.name}: anchor {ref['at']} outside 0..{n - 1}: {ref}")
+    # The folder date must be the session's date in the story's own timezone,
+    # the same date the player shows.
+    match = FOLDER_RE.match(folder.name)
+    if not match:
+        sys.exit(f"{folder.name}: story folders must be named YYYY-MM-DD-<slug>")
+    tz = ZoneInfo(story["timezone"]) if story.get("timezone") else datetime.UTC
+    session_date = (
+        datetime.datetime.fromtimestamp(events[0]["t"], tz).date().isoformat()
+    )
+    if match.group(1) != session_date:
+        sys.exit(
+            f"{folder.name}: folder date {match.group(1)} != session date {session_date}"
+        )
     return events, story
 
 
 def landing_page(entries: list[dict], version: str) -> str:
     items = "\n".join(
         f"""      <li>
-        <a href="{html.escape(e['slug'])}/">
-          <span class="t">{html.escape(e['title'])}</span>
-          <span class="s">{html.escape(e['subtitle'])}</span>
-          <span class="m">{e['events']} events</span>
+        <a href="{html.escape(e["slug"])}/">
+          <time class="d" datetime="{e["date"]}">{e["date"]}</time>
+          <span class="t">{html.escape(e["title"])}</span>
+          <span class="s">{html.escape(e["subtitle"])}</span>
+          <span class="m">{e["events"]} events</span>
         </a>
       </li>"""
         for e in entries
@@ -94,9 +112,10 @@ def landing_page(entries: list[dict], version: str) -> str:
   h1 {{ font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.1; margin: 0 0 1rem; }}
   p.lead {{ color: var(--fg2); margin: 0 0 2.5rem; }}
   ul {{ list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }}
-  a {{ display: grid; gap: 0.3rem; padding: 1.2rem 1.3rem; border: 1px solid var(--border); border-radius: 12px; color: inherit; text-decoration: none; transition: border-color 0.2s; }}
+  .d {{ position: absolute; top: 1rem; right: 1.1rem; font-family: ui-monospace, Menlo, monospace; font-size: 0.75rem; color: var(--acc); border: 1px solid rgba(91, 224, 179, 0.35); background: rgba(91, 224, 179, 0.06); border-radius: 999px; padding: 0.15rem 0.6rem; }}
+  a {{ position: relative; display: grid; gap: 0.3rem; padding: 1.2rem 1.3rem; border: 1px solid var(--border); border-radius: 12px; color: inherit; text-decoration: none; transition: border-color 0.2s; }}
   a:hover, a:focus-visible {{ border-color: var(--acc); outline: none; }}
-  .t {{ font-weight: 600; font-size: 1.15rem; }}
+  .t {{ font-weight: 600; font-size: 1.15rem; padding-right: 7.5rem; }}
   .s {{ color: var(--fg2); }}
   .m {{ color: var(--acc); font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; }}
   footer {{ margin-top: 3rem; color: var(--fg2); font-size: 0.8rem; font-family: ui-monospace, Menlo, monospace; }}
@@ -126,10 +145,12 @@ def main() -> None:
     SITE.mkdir()
 
     entries = []
-    for folder in sorted(p for p in STORIES.iterdir() if p.is_dir()):
-        if not (folder / "events.json").is_file() or not (
-            folder / "story.json"
-        ).is_file():
+    # Newest first: the YYYY-MM-DD prefix makes reverse name order date order.
+    for folder in sorted((p for p in STORIES.iterdir() if p.is_dir()), reverse=True):
+        if (
+            not (folder / "events.json").is_file()
+            or not (folder / "story.json").is_file()
+        ):
             print(f"skip {folder.name}: no events.json/story.json")
             continue
         events, story = load_story(folder, max_schema)
@@ -145,6 +166,7 @@ def main() -> None:
         entries.append(
             {
                 "slug": folder.name,
+                "date": folder.name[:10],
                 "title": story.get("title", folder.name),
                 "subtitle": story.get("subtitle", ""),
                 "events": len(events),
@@ -156,7 +178,9 @@ def main() -> None:
     shutil.copytree(ROOT / "schemas", SITE / "schemas")
     (SITE / "index.html").write_text(landing_page(entries, version), encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
-    print(f"wrote {SITE.relative_to(ROOT)}/ with {len(entries)} stories (player {version})")
+    print(
+        f"wrote {SITE.relative_to(ROOT)}/ with {len(entries)} stories (player {version})"
+    )
 
 
 if __name__ == "__main__":

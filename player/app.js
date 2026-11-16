@@ -23,25 +23,30 @@
 
   // Tool-name suffixes (after mcp__<server>__) that count as "checking on jobs".
   // story.poll_tools / story.poll_label override these for other sessions.
-  var DEFAULT_POLL_TOOLS = ['condor_check_watches', 'condor_query_jobs', 'condor_watch_jobs', 'condor_get_job'];
+  var DEFAULT_POLL_TOOLS = [
+    'condor_check_watches',
+    'condor_query_jobs',
+    'condor_watch_jobs',
+    'condor_get_job',
+  ];
   var DEFAULT_POLL_LABEL = 'checked on the batch jobs';
   var DEFAULT_FF_LABEL = 'batch jobs';
   var POLL_MIN = 3;
   var GAP_DIVIDER_S = 120;
-  var MAX_STEP_S = 1.2;   // longest pause between two revealed items at 1×
-  var MIN_STEP_S = 0.12;  // shortest pause, so bursts stay readable
-  var TYPE_CPS = 70;      // typing speed of user turns at 1×, characters per second
+  var MAX_STEP_S = 1.2; // longest pause between two revealed items at 1×
+  var MIN_STEP_S = 0.12; // shortest pause, so bursts stay readable
+  var TYPE_CPS = 70; // typing speed of user turns at 1×, characters per second
   var TYPE_MIN_S = 0.35;
-  var TYPE_MAX_S = 2.6;   // longest a single user turn takes to type at 1×
-  var READ_LINE = 0.4;    // the reading line, as a fraction of viewport height
+  var TYPE_MAX_S = 2.6; // longest a single user turn takes to type at 1×
+  var READ_LINE = 0.4; // the reading line, as a fraction of viewport height
   // Activity timeline: ordinary gaps count as real seconds up to ACT_GAP_CAP;
   // a wait (a gap longer than WAIT_GAP_S) counts as ACT_WAIT.
   var WAIT_GAP_S = 30;
   var ACT_GAP_MIN = 0.5;
   var ACT_GAP_CAP = 6;
   var ACT_WAIT = 5;
-  var FF_S = 1.0;         // how long playback takes to fast-forward a wait at 1×
-  var SEEK_S = 0.9;       // animated jumps (chapter nav, scrubber ticks)
+  var FF_S = 1.0; // how long playback takes to fast-forward a wait at 1×
+  var SEEK_S = 0.9; // animated jumps (chapter nav, scrubber ticks)
 
   // ---------------------------------------------------------------- helpers
 
@@ -66,10 +71,12 @@
   // Plain text with `code` spans, built as DOM nodes (never innerHTML).
   function inlineCode(text) {
     var frag = document.createDocumentFragment();
-    String(text == null ? '' : text).split('`').forEach(function (part, i) {
-      if (!part) return;
-      frag.appendChild(i % 2 ? el('code', null, part) : document.createTextNode(part));
-    });
+    String(text == null ? '' : text)
+      .split('`')
+      .forEach(function (part, i) {
+        if (!part) return;
+        frag.appendChild(i % 2 ? el('code', null, part) : document.createTextNode(part));
+      });
     return frag;
   }
 
@@ -79,11 +86,20 @@
   }
 
   function firstLine(s) {
-    return String(s || '').split('\n').find(function (l) { return l.trim(); }) || '';
+    return (
+      String(s || '')
+        .split('\n')
+        .find(function (l) {
+          return l.trim();
+        }) || ''
+    );
   }
 
   function basename(p) {
-    return String(p || '').replace(/\/+$/, '').split('/').pop();
+    return String(p || '')
+      .replace(/\/+$/, '')
+      .split('/')
+      .pop();
   }
 
   function endOf(ev) {
@@ -95,10 +111,12 @@
     if (s < 10) return s.toFixed(1) + ' s';
     if (s < 60) return Math.round(s) + ' s';
     if (s < 3600) {
-      var m = Math.floor(s / 60), r = Math.round(s - m * 60);
+      var m = Math.floor(s / 60),
+        r = Math.round(s - m * 60);
       return r ? m + ' min ' + r + ' s' : m + ' min';
     }
-    var h = Math.floor(s / 3600), mm = Math.round((s - h * 3600) / 60);
+    var h = Math.floor(s / 3600),
+      mm = Math.round((s - h * 3600) / 60);
     return mm ? h + ' h ' + mm + ' min' : h + ' h';
   }
 
@@ -122,7 +140,16 @@
     return new Date(t * 1000).toLocaleDateString('en-GB', opts);
   }
 
-  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  // YYYY-MM-DD in the story's zone; en-CA formats dates that way.
+  function isoDate(t) {
+    var opts = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    if (timeZone) opts.timeZone = timeZone;
+    return new Date(t * 1000).toLocaleDateString('en-CA', opts);
+  }
+
+  function pad2(n) {
+    return n < 10 ? '0' + n : String(n);
+  }
 
   function mcpParts(name) {
     if (typeof name !== 'string' || name.indexOf('mcp__') !== 0) return null;
@@ -137,12 +164,19 @@
   function decodeEscapes(s) {
     return s.replace(/\\(u[0-9a-fA-F]{4}|["\\/bfnrt])/g, function (_, c) {
       switch (c[0]) {
-        case 'n': return '\n';
-        case 't': return '\t';
-        case 'r': return '';
-        case 'b': case 'f': return '';
-        case 'u': return String.fromCharCode(parseInt(c.slice(1), 16));
-        default: return c;
+        case 'n':
+          return '\n';
+        case 't':
+          return '\t';
+        case 'r':
+          return '';
+        case 'b':
+        case 'f':
+          return '';
+        case 'u':
+          return String.fromCharCode(parseInt(c.slice(1), 16));
+        default:
+          return c;
       }
     });
   }
@@ -151,7 +185,11 @@
     if (typeof s !== 'string') return undefined;
     var t = s.trim();
     if (!t || (t[0] !== '{' && t[0] !== '[')) return undefined;
-    try { return JSON.parse(t); } catch (e) { return undefined; }
+    try {
+      return JSON.parse(t);
+    } catch {
+      return undefined;
+    }
   }
 
   // Pull long or multi-line strings out of a JSON value so they render as real
@@ -168,10 +206,15 @@
         blocks.push({ label: label, text: v });
         return '‹' + label + ' · see below›';
       }
-      if (Array.isArray(v)) return v.map(function (x, i) { return walk(x, path + '[' + i + ']', null); });
+      if (Array.isArray(v))
+        return v.map(function (x, i) {
+          return walk(x, path + '[' + i + ']', null);
+        });
       if (v && typeof v === 'object') {
         var o = {};
-        Object.keys(v).forEach(function (k) { o[k] = walk(v[k], path ? path + '.' + k : k, v); });
+        Object.keys(v).forEach(function (k) {
+          o[k] = walk(v[k], path ? path + '.' + k : k, v);
+        });
         return o;
       }
       return v;
@@ -184,7 +227,10 @@
 
   function loadData() {
     if (window.REPLAY_EVENTS && window.REPLAY_STORY) {
-      return Promise.resolve({ events: window.REPLAY_EVENTS, story: window.REPLAY_STORY });
+      return Promise.resolve({
+        events: window.REPLAY_EVENTS,
+        story: window.REPLAY_STORY,
+      });
     }
     function get(url) {
       return fetch(url).then(function (r) {
@@ -202,8 +248,15 @@
   function checkSchema(d) {
     var schema = d.story.schema == null ? 1 : d.story.schema;
     if (schema > STORY_SCHEMA) {
-      throw new Error('story.json uses schema ' + schema + ', but player ' + PLAYER_VERSION +
-        ' supports up to schema ' + STORY_SCHEMA + '. Use a newer player.');
+      throw new Error(
+        'story.json uses schema ' +
+          schema +
+          ', but player ' +
+          PLAYER_VERSION +
+          ' supports up to schema ' +
+          STORY_SCHEMA +
+          '. Use a newer player.',
+      );
     }
     return d;
   }
@@ -212,13 +265,20 @@
     var app = document.getElementById('app');
     app.textContent = '';
     var box = el('div', 'load-error');
-    append(box,
+    append(
+      box,
       el('h1', null, 'The session data could not be loaded'),
       el('p', null, 'This page reads events.json and story.json next to index.html.'),
-      append(el('p'), document.createTextNode('Serve the folder over HTTP (e.g. '), el('code', null, 'python3 -m http.server'),
-        document.createTextNode('), or run '), el('code', null, 'python3 tools/build_site.py'),
-        document.createTextNode(' once so that opening index.html from disk works.')),
-      el('pre', null, String(err && err.message ? err.message : err)));
+      append(
+        el('p'),
+        document.createTextNode('Serve the folder over HTTP (e.g. '),
+        el('code', null, 'python3 -m http.server'),
+        document.createTextNode('), or run '),
+        el('code', null, 'python3 tools/build_site.py'),
+        document.createTextNode(' once so that opening index.html from disk works.'),
+      ),
+      el('pre', null, String(err && err.message ? err.message : err)),
+    );
     app.appendChild(box);
   }
 
@@ -232,17 +292,25 @@
       var p = ev.kind === 'tool' && mcpParts(ev.name);
       return !!p && pollSet.has(p.tool);
     }
-    function isToolSearch(ev) { return ev.kind === 'tool' && ev.name === 'ToolSearch'; }
+    function isToolSearch(ev) {
+      return ev.kind === 'tool' && ev.name === 'ToolSearch';
+    }
 
     var cardsAt = new Map();
     (story.cards || []).forEach(function (c) {
-      if (!(c.at >= 0 && c.at < n)) { console.warn('card anchor out of range:', c); return; }
+      if (!(c.at >= 0 && c.at < n)) {
+        console.warn('card anchor out of range:', c);
+        return;
+      }
       if (!cardsAt.has(c.at)) cardsAt.set(c.at, []);
       cardsAt.get(c.at).push(c);
     });
     var chapterAt = new Map();
     (story.chapters || []).forEach(function (c, i) {
-      if (!(c.at >= 0 && c.at < n)) { console.warn('chapter anchor out of range:', c); return; }
+      if (!(c.at >= 0 && c.at < n)) {
+        console.warn('chapter anchor out of range:', c);
+        return;
+      }
       chapterAt.set(c.at, { title: c.title, number: i + 1 });
     });
     var anchors = new Set(Array.from(cardsAt.keys()).concat(Array.from(chapterAt.keys())));
@@ -257,27 +325,58 @@
       if (isPoll(ev)) {
         var run = [i];
         var k = i + 1;
-        while (k < n && !anchors.has(k) && (isPoll(events[k]) || isToolSearch(events[k]))) { run.push(k); k++; }
+        while (k < n && !anchors.has(k) && (isPoll(events[k]) || isToolSearch(events[k]))) {
+          run.push(k);
+          k++;
+        }
         while (run.length && !isPoll(events[run[run.length - 1]])) run.pop();
-        var polls = run.filter(function (x) { return isPoll(events[x]); }).length;
+        var polls = run.filter(function (x) {
+          return isPoll(events[x]);
+        }).length;
         if (polls >= POLL_MIN) {
           var last = run[run.length - 1];
           // Calls can overlap (issued in parallel), so the group ends at the latest end.
-          var tEnd = Math.max.apply(null, run.map(function (x) { return endOf(events[x]); }));
-          items.push({ type: 'group', events: run, polls: polls, ev0: i, t: ev.t, tEnd: tEnd });
+          var tEnd = Math.max.apply(
+            null,
+            run.map(function (x) {
+              return endOf(events[x]);
+            }),
+          );
+          items.push({
+            type: 'group',
+            events: run,
+            polls: polls,
+            ev0: i,
+            t: ev.t,
+            tEnd: tEnd,
+          });
           i = last + 1;
           continue;
         }
       }
-      items.push({ type: ev.kind, events: [i], ev0: i, t: ev.t, tEnd: endOf(ev) });
+      items.push({
+        type: ev.kind,
+        events: [i],
+        ev0: i,
+        t: ev.t,
+        tEnd: endOf(ev),
+      });
       i++;
     }
 
     var itemOfEvent = new Array(n);
-    items.forEach(function (it, idx) { it.events.forEach(function (e) { itemOfEvent[e] = idx; }); });
+    items.forEach(function (it, idx) {
+      it.events.forEach(function (e) {
+        itemOfEvent[e] = idx;
+      });
+    });
 
-    var t0 = Infinity, t1 = -Infinity;
-    events.forEach(function (e) { t0 = Math.min(t0, e.t); t1 = Math.max(t1, endOf(e)); });
+    var t0 = Infinity,
+      t1 = -Infinity;
+    events.forEach(function (e) {
+      t0 = Math.min(t0, e.t);
+      t1 = Math.max(t1, endOf(e));
+    });
 
     // The session's main MCP server is the one it called most.
     var serverCounts = new Map();
@@ -285,19 +384,34 @@
       var p = e.kind === 'tool' && mcpParts(e.name);
       if (p) serverCounts.set(p.server, (serverCounts.get(p.server) || 0) + 1);
     });
-    var server = null, best = 0;
-    serverCounts.forEach(function (c, s) { if (c > best) { best = c; server = s; } });
+    var server = null,
+      best = 0;
+    serverCounts.forEach(function (c, s) {
+      if (c > best) {
+        best = c;
+        server = s;
+      }
+    });
 
     return {
-      events: events, story: story, items: items, itemOfEvent: itemOfEvent,
-      cardsAt: cardsAt, chapterAt: chapterAt, t0: t0, t1: t1, server: server,
+      events: events,
+      story: story,
+      items: items,
+      itemOfEvent: itemOfEvent,
+      cardsAt: cardsAt,
+      chapterAt: chapterAt,
+      t0: t0,
+      t1: t1,
+      server: server,
       pollLabel: story.poll_label || DEFAULT_POLL_LABEL,
-      ffLabel: story.ff_label || DEFAULT_FF_LABEL
+      ffLabel: story.ff_label || DEFAULT_FF_LABEL,
     };
   }
 
   function computeStats(m) {
-    var tools = m.events.filter(function (e) { return e.kind === 'tool'; });
+    var tools = m.events.filter(function (e) {
+      return e.kind === 'tool';
+    });
     var services = new Set();
     var serverCalls = 0;
     tools.forEach(function (e) {
@@ -310,11 +424,15 @@
     var svc = Array.from(services).sort();
     var stats = [
       { label: 'Session length', value: humanSpan(workSeconds(m)) },
-      { label: 'Tool calls', value: String(tools.length) }
+      { label: 'Tool calls', value: String(tools.length) },
     ];
     if (m.server) {
       stats.push({ label: m.server + ' calls', value: String(serverCalls) });
-      stats.push({ label: m.server + ' services used', value: String(svc.length), sub: svc.join(' · ') });
+      stats.push({
+        label: m.server + ' services used',
+        value: String(svc.length),
+        sub: svc.join(' · '),
+      });
     }
     return stats.concat(m.story.stats_extra || []);
   }
@@ -332,9 +450,14 @@
       document.body.appendChild(ta);
       ta.select();
       var ok = false;
-      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
       ta.remove();
-      if (ok) resolve(); else reject(new Error('copy failed'));
+      if (ok) resolve();
+      else reject(new Error('copy failed'));
     });
   }
 
@@ -342,16 +465,41 @@
     var story = m.story;
     var hero = el('header', 'hero');
     var text = el('div', 'hero-text');
+    var badge = el('time', 'date-badge', isoDate(m.t0));
+    badge.dateTime = isoDate(m.t0);
+    hero.appendChild(badge);
     var eyebrow = el('p', 'eyebrow');
-    append(eyebrow, el('span', 'dot'), document.createTextNode('session replay · ' + dateLabel(m.t0)));
+    append(
+      eyebrow,
+      el('span', 'dot'),
+      document.createTextNode('session replay · ' + dateLabel(m.t0)),
+    );
     var h1 = el('h1', 'hero-title');
-    String(story.title || 'Session replay').split(/\s+/).forEach(function (w, i) {
-      if (i) h1.appendChild(document.createTextNode(' '));
-      h1.appendChild(el('span', 'w', w));
-    });
+    String(story.title || 'Session replay')
+      .split(/\s+/)
+      .forEach(function (w, i) {
+        if (i) h1.appendChild(document.createTextNode(' '));
+        h1.appendChild(el('span', 'w', w));
+      });
     h1.appendChild(el('span', 'caret'));
     append(text, eyebrow, h1);
     if (story.subtitle) text.appendChild(append(el('p', 'lede'), inlineCode(story.subtitle)));
+    // How the session was run (model, effort, client, mode), as chips.
+    var sess = story.session;
+    if (sess) {
+      var chips = el('ul', 'session-chips');
+      chips.setAttribute('aria-label', 'session configuration');
+      [
+        ['model', sess.model],
+        ['effort', sess.effort],
+        ['client', sess.client],
+        ['mode', sess.mode],
+      ].forEach(function (kv) {
+        if (!kv[1]) return;
+        append(chips, append(el('li'), el('span', 'k', kv[0]), el('span', 'v', kv[1])));
+      });
+      text.appendChild(chips);
+    }
     var setup = story.setup || {};
     if (setup.intro) text.appendChild(append(el('p', 'intro'), inlineCode(setup.intro)));
     var cta = el('a', 'cta');
@@ -382,9 +530,17 @@
           btn.type = 'button';
           btn.setAttribute('aria-label', 'Copy: ' + s.code);
           btn.addEventListener('click', function () {
-            copyText(s.code).then(function () { btn.textContent = 'copied'; },
-              function () { btn.textContent = 'select & copy'; });
-            setTimeout(function () { btn.textContent = 'copy'; }, 1600);
+            copyText(s.code).then(
+              function () {
+                btn.textContent = 'copied';
+              },
+              function () {
+                btn.textContent = 'select & copy';
+              },
+            );
+            setTimeout(function () {
+              btn.textContent = 'copy';
+            }, 1600);
           });
           append(cmd, pre, btn);
           body.appendChild(cmd);
@@ -405,7 +561,15 @@
     var dl = el('dl', 'stats-grid');
     computeStats(m).forEach(function (s) {
       var cell = el('div', 'stat');
-      append(cell, el('dt', null, s.label), append(el('dd'), el('span', 'stat-v', s.value), s.sub ? el('span', 'stat-sub', s.sub) : null));
+      append(
+        cell,
+        el('dt', null, s.label),
+        append(
+          el('dd'),
+          el('span', 'stat-v', s.value),
+          s.sub ? el('span', 'stat-sub', s.sub) : null,
+        ),
+      );
       dl.appendChild(cell);
     });
     sec.appendChild(dl);
@@ -467,7 +631,9 @@
   function turnHeader(who, t, extra) {
     var h = el('div', 'turn-h');
     h.appendChild(el('span', 'who', who));
-    (extra || []).forEach(function (x) { h.appendChild(x); });
+    (extra || []).forEach(function (x) {
+      h.appendChild(x);
+    });
     var time = el('time', null, clock(t));
     time.dateTime = new Date(t * 1000).toISOString();
     h.appendChild(time);
@@ -520,7 +686,10 @@
     if (!st || st.done) return;
     st.done = true;
     var dur = instant || !(speed < Infinity) ? 0 : typeDuration(st.text) / speed;
-    if (dur < 0.03) { finishTyping(node); return; }
+    if (dur < 0.03) {
+      finishTyping(node);
+      return;
+    }
     node.classList.add('is-typing');
     var len = st.text.length;
     var start = performance.now();
@@ -530,7 +699,10 @@
       st.typed.textContent = st.text.slice(0, cut);
       st.rest.textContent = st.text.slice(cut);
       if (f < 1) requestAnimationFrame(frame);
-      else { node.classList.remove('is-typing'); finishTyping(node); }
+      else {
+        node.classList.remove('is-typing');
+        finishTyping(node);
+      }
     }
     requestAnimationFrame(frame);
   }
@@ -561,25 +733,48 @@
     var arg = '';
     if (inp) {
       switch (name) {
-        case 'Bash': arg = inp.description || firstLine(inp.command); break;
-        case 'Write': case 'Edit': case 'Read': case 'NotebookEdit':
-          arg = basename(inp.file_path || inp.notebook_path); break;
+        case 'Bash':
+          arg = inp.description || firstLine(inp.command);
+          break;
+        case 'Write':
+        case 'Edit':
+        case 'Read':
+        case 'NotebookEdit':
+          arg = basename(inp.file_path || inp.notebook_path);
+          break;
         case 'ToolSearch':
-          arg = String(inp.query || '').replace(/^select:/, '').split(',').map(function (q) {
-            var mp = mcpParts(q.trim());
-            return mp ? mp.tool : q.trim();
-          }).join(', ');
+          arg = String(inp.query || '')
+            .replace(/^select:/, '')
+            .split(',')
+            .map(function (q) {
+              var mp = mcpParts(q.trim());
+              return mp ? mp.tool : q.trim();
+            })
+            .join(', ');
           if (/^select:/.test(inp.query || '')) arg = 'load ' + arg;
           break;
-        case 'WebFetch': arg = inp.url; break;
-        case 'WebSearch': arg = inp.query; break;
+        case 'WebFetch':
+          arg = inp.url;
+          break;
+        case 'WebSearch':
+          arg = inp.query;
+          break;
         case 'AskUserQuestion':
-          arg = inp.questions && inp.questions[0] && inp.questions[0].question; break;
-        case 'Task': case 'Agent': arg = inp.description; break;
-        default: arg = '';
+          arg = inp.questions && inp.questions[0] && inp.questions[0].question;
+          break;
+        case 'Task':
+        case 'Agent':
+          arg = inp.description;
+          break;
+        default:
+          arg = '';
       }
     }
-    return { server: null, fn: name, arg: arg ? ' · ' + truncate(firstLine(arg), 80) : '' };
+    return {
+      server: null,
+      fn: name,
+      arg: arg ? ' · ' + truncate(firstLine(arg), 80) : '',
+    };
   }
 
   function badge(isError) {
@@ -592,10 +787,12 @@
     var btn = el('button', 'sig');
     btn.type = 'button';
     btn.setAttribute('aria-expanded', 'false');
-    var id = 'acc-' + (++bodySeq);
+    var id = 'acc-' + ++bodySeq;
     btn.setAttribute('aria-controls', id);
     btn.appendChild(el('span', 'chev'));
-    buttonParts.forEach(function (p) { btn.appendChild(p); });
+    buttonParts.forEach(function (p) {
+      btn.appendChild(p);
+    });
     var body = el('div', 'acc-body');
     body.id = id;
     body.hidden = true;
@@ -626,9 +823,13 @@
     var meta = el('span', 'sig-meta');
     var d = typeof ev.t_end === 'number' ? humanDuration(ev.t_end - ev.t) : '';
     append(meta, d ? el('span', 'dur', d) : null, badge(ev.is_error));
-    var wrap = accordion('tool' + (ev.is_error ? ' is-err' : '') + (sig.server ? ' is-mcp' : ''), [main, meta], function (body) {
-      renderToolBody(ev, body);
-    });
+    var wrap = accordion(
+      'tool' + (ev.is_error ? ' is-err' : '') + (sig.server ? ' is-mcp' : ''),
+      [main, meta],
+      function (body) {
+        renderToolBody(ev, body);
+      },
+    );
     wrap.dataset.ev = idx;
     return wrap;
   }
@@ -651,7 +852,9 @@
     } else if (!isContainer && ex.blocks.length === 0) {
       container.appendChild(codeBlock(labelPrefix, String(sk), 'json'));
     }
-    ex.blocks.forEach(function (b) { container.appendChild(codeBlock(b.label, b.text)); });
+    ex.blocks.forEach(function (b) {
+      container.appendChild(codeBlock(b.label, b.text));
+    });
   }
 
   function renderInput(ev, box) {
@@ -661,8 +864,12 @@
       if (parsed !== undefined) inp = parsed;
       else {
         var looksJSON = /^\s*[{[]/.test(inp);
-        box.appendChild(codeBlock(looksJSON ? 'input · too long to keep whole, shown as text' : 'input',
-          looksJSON ? decodeEscapes(inp) : inp));
+        box.appendChild(
+          codeBlock(
+            looksJSON ? 'input · too long to keep whole, shown as text' : 'input',
+            looksJSON ? decodeEscapes(inp) : inp,
+          ),
+        );
         return;
       }
     }
@@ -674,14 +881,18 @@
     switch (ev.name) {
       case 'Bash':
         if (typeof inp.command === 'string') {
-          box.appendChild(codeBlock(inp.description ? '$ ' + inp.description : 'command', inp.command, 'shell'));
-          delete rest.command; delete rest.description;
+          box.appendChild(
+            codeBlock(inp.description ? '$ ' + inp.description : 'command', inp.command, 'shell'),
+          );
+          delete rest.command;
+          delete rest.description;
         }
         break;
       case 'Write':
         if (typeof inp.content === 'string') {
           box.appendChild(codeBlock('write → ' + (inp.file_path || ''), inp.content));
-          delete rest.content; delete rest.file_path;
+          delete rest.content;
+          delete rest.file_path;
         }
         break;
       case 'Edit':
@@ -689,10 +900,13 @@
           box.appendChild(el('p', 'blk-path', 'edit → ' + (inp.file_path || '')));
           box.appendChild(codeBlock('− replace', inp.old_string, 'del'));
           box.appendChild(codeBlock('+ with', inp.new_string || '', 'add'));
-          delete rest.old_string; delete rest.new_string; delete rest.file_path;
+          delete rest.old_string;
+          delete rest.new_string;
+          delete rest.file_path;
         }
         break;
-      default: break;
+      default:
+        break;
     }
     if (Object.keys(rest).length) jsonOrBlocks(rest, box, 'input');
   }
@@ -719,26 +933,47 @@
     } else if (!res) {
       scroller.appendChild(el('p', 'empty', '(empty result)'));
     } else {
-      scroller.appendChild(codeBlock(null, /^\s*[{[]/.test(res) ? decodeEscapes(res) : res, 'wrap'));
+      scroller.appendChild(
+        codeBlock(null, /^\s*[{[]/.test(res) ? decodeEscapes(res) : res, 'wrap'),
+      );
     }
     outBox.appendChild(scroller);
     body.appendChild(outBox);
   }
 
   function renderGroup(m, it) {
-    var evs = it.events.map(function (i) { return m.events[i]; });
-    var errs = evs.filter(function (e) { return e.is_error; }).length;
+    var evs = it.events.map(function (i) {
+      return m.events[i];
+    });
+    var errs = evs.filter(function (e) {
+      return e.is_error;
+    }).length;
     var main = el('span', 'sig-main');
-    append(main, el('span', 'hourglass', '⏳'),
-      el('span', 'fn grp-label', m.pollLabel + ' ' + it.polls + '× over ' + humanSpan(it.tEnd - it.t)));
+    append(
+      main,
+      el('span', 'hourglass', '⏳'),
+      el(
+        'span',
+        'fn grp-label',
+        m.pollLabel + ' ' + it.polls + '× over ' + humanSpan(it.tEnd - it.t),
+      ),
+    );
     var meta = el('span', 'sig-meta');
-    append(meta, el('span', 'dur', clock(it.t) + '–' + clock(it.tEnd)),
-      errs ? el('span', 'badge warn', errs + (errs > 1 ? ' errors' : ' error')) : badge(false));
+    append(
+      meta,
+      el('span', 'dur', clock(it.t) + '–' + clock(it.tEnd)),
+      errs ? el('span', 'badge warn', errs + (errs > 1 ? ' errors' : ' error')) : badge(false),
+    );
     var wrap = accordion('group', [main, meta], function (body) {
       var list = el('div', 'group-list');
-      it.events.forEach(function (i) { list.appendChild(renderToolLine(m.events[i], i)); });
+      it.events.forEach(function (i) {
+        list.appendChild(renderToolLine(m.events[i], i));
+      });
       body.appendChild(list);
-      if (OPEN_ALL) list.querySelectorAll('.sig').forEach(function (b) { toggleAccordion(b, true); });
+      if (OPEN_ALL)
+        list.querySelectorAll('.sig').forEach(function (b) {
+          toggleAccordion(b, true);
+        });
     });
     return wrap;
   }
@@ -747,11 +982,23 @@
     var ev = m.events[it.ev0];
     var node;
     switch (it.type) {
-      case 'group': node = renderGroup(m, it); node.classList.add('item'); break;
-      case 'prompt': node = renderUserTurn(ev, false); break;
-      case 'interject': node = renderUserTurn(ev, true); break;
-      case 'text': node = renderAgentText(ev); break;
-      case 'tool': node = renderToolLine(ev, it.ev0); node.classList.add('item'); break;
+      case 'group':
+        node = renderGroup(m, it);
+        node.classList.add('item');
+        break;
+      case 'prompt':
+        node = renderUserTurn(ev, false);
+        break;
+      case 'interject':
+        node = renderUserTurn(ev, true);
+        break;
+      case 'text':
+        node = renderAgentText(ev);
+        break;
+      case 'tool':
+        node = renderToolLine(ev, it.ev0);
+        node.classList.add('item');
+        break;
       default:
         node = el('div', 'item note', '[' + it.type + '] ' + truncate(ev.text || '', 200));
     }
@@ -765,7 +1012,7 @@
   function renderFigure(img, cls) {
     if (!img || typeof img.src !== 'string') return null;
     var src = img.src;
-    if (!/^[A-Za-z0-9_][A-Za-z0-9_.\/-]*$/.test(src) || src.indexOf('..') !== -1) return null;
+    if (!/^[A-Za-z0-9_][A-Za-z0-9_./-]*$/.test(src) || src.indexOf('..') !== -1) return null;
     var fig = el('figure', cls);
     var a = el('a');
     a.href = src;
@@ -800,9 +1047,16 @@
     sec.setAttribute('aria-label', 'Session replay');
 
     // Sticky chapter navigation
-    var chapters = Array.from(m.chapterAt.entries()).sort(function (a, b) { return a[0] - b[0]; });
+    var chapters = Array.from(m.chapterAt.entries()).sort(function (a, b) {
+      return a[0] - b[0];
+    });
     view.chapters = chapters.map(function (e) {
-      return { at: e[0], item: m.itemOfEvent[e[0]], title: e[1].title, number: e[1].number };
+      return {
+        at: e[0],
+        item: m.itemOfEvent[e[0]],
+        title: e[1].title,
+        number: e[1].number,
+      };
     });
     var nav = el('nav', 'chapnav');
     nav.setAttribute('aria-label', 'Chapters');
@@ -814,7 +1068,9 @@
       var b = el('button', 'chap-btn');
       b.type = 'button';
       append(b, el('span', 'n', pad2(c.number)), el('span', 't', c.title));
-      b.addEventListener('click', function () { view.seekItem(c.item, true); });
+      b.addEventListener('click', function () {
+        view.seekItem(c.item, true);
+      });
       ol.appendChild(append(el('li'), b));
       return b;
     });
@@ -831,10 +1087,14 @@
 
     var items = m.items;
     view.itemEls = new Array(items.length);
-    view.revealEls = items.map(function () { return []; });
+    view.revealEls = items.map(function () {
+      return [];
+    });
     view.cardEls = [];
 
-    var seg = null, flow = null, rail = null;
+    var seg = null,
+      flow = null,
+      rail = null;
     var prevEnd = null;
     items.forEach(function (it, idx) {
       var cards = m.cardsAt.get(it.ev0);
@@ -856,8 +1116,12 @@
         if (chapter) {
           var ch = el('div', 'chapter');
           ch.id = 'chapter-' + chapter.number;
-          append(ch, el('span', 'ch-n', pad2(chapter.number)), el('h2', null, chapter.title),
-            el('span', 'ch-t', clock(it.t)));
+          append(
+            ch,
+            el('span', 'ch-n', pad2(chapter.number)),
+            el('h2', null, chapter.title),
+            el('span', 'ch-t', clock(it.t)),
+          );
           ch.dataset.item = idx;
           transcript.appendChild(ch);
           view.revealEls[idx].push(ch);
@@ -915,7 +1179,8 @@
   }
 
   function buildTimeline(m) {
-    var items = m.items, n = items.length;
+    var items = m.items,
+      n = items.length;
     var act = new Array(n);
     var trans = [];
     act[0] = 0;
@@ -925,8 +1190,18 @@
       // fast-forwarded, so it gets the minimum span and no wait styling.
       var human = items[k + 1].type === 'prompt';
       var wait = !human && gap > WAIT_GAP_S;
-      var len = human ? ACT_GAP_MIN : wait ? ACT_WAIT : Math.min(ACT_GAP_CAP, Math.max(ACT_GAP_MIN, gap));
-      trans.push({ wait: wait, human: human, group: items[k].type === 'group', gap: gap, len: len });
+      var len = human
+        ? ACT_GAP_MIN
+        : wait
+          ? ACT_WAIT
+          : Math.min(ACT_GAP_CAP, Math.max(ACT_GAP_MIN, gap));
+      trans.push({
+        wait: wait,
+        human: human,
+        group: items[k].type === 'group',
+        gap: gap,
+        len: len,
+      });
       act[k + 1] = act[k] + len;
     }
     m.act = act;
@@ -939,17 +1214,23 @@
     var n = m.items.length;
     if (!(A > 0)) return { k: 0, f: 0 };
     if (A >= m.act[n - 1]) return { k: n - 1, f: 0 };
-    var lo = 0, hi = n - 1, k = 0;
+    var lo = 0,
+      hi = n - 1,
+      k = 0;
     while (lo <= hi) {
       var mid = (lo + hi) >> 1;
-      if (m.act[mid] <= A) { k = mid; lo = mid + 1; } else hi = mid - 1;
+      if (m.act[mid] <= A) {
+        k = mid;
+        lo = mid + 1;
+      } else hi = mid - 1;
     }
     return { k: k, f: (A - m.act[k]) / m.trans[k].len };
   }
 
   function realTime(m, A) {
     var p = locate(m, A);
-    var it = m.items[p.k], next = m.items[p.k + 1];
+    var it = m.items[p.k],
+      next = m.items[p.k + 1];
     return next ? it.t + p.f * (next.t - it.t) : it.t;
   }
 
@@ -964,22 +1245,26 @@
       m: m,
       n: m.items.length,
       A: 0,
-      present: -1,      // last item at or above the reading line (-1: none yet)
+      present: -1, // last item at or above the reading line (-1: none yet)
       playing: false,
       speed: 1,
-      driving: null,    // running position animation (seek or playback)
-      pos: null         // cached document Y of each item's top
+      driving: null, // running position animation (seek or playback)
+      pos: null, // cached document Y of each item's top
     };
 
     view.positions = function () {
       if (!view.pos) {
         var sy = window.scrollY;
-        view.pos = view.itemEls.map(function (e) { return e.getBoundingClientRect().top + sy; });
+        view.pos = view.itemEls.map(function (e) {
+          return e.getBoundingClientRect().top + sy;
+        });
       }
       return view.pos;
     };
 
-    view.readLine = function () { return window.innerHeight * READ_LINE; };
+    view.readLine = function () {
+      return window.innerHeight * READ_LINE;
+    };
 
     // Scroll position → activity value, by interpolating the reading line
     // between the tops of the two items it falls between.
@@ -989,10 +1274,15 @@
       var y = window.scrollY + view.readLine() + 1;
       var n = view.n;
       if (y < pos[0]) return { A: 0, present: -1 };
-      var lo = 0, hi = n - 1, k = 0;
+      var lo = 0,
+        hi = n - 1,
+        k = 0;
       while (lo <= hi) {
         var mid = (lo + hi) >> 1;
-        if (pos[mid] <= y) { k = mid; lo = mid + 1; } else hi = mid - 1;
+        if (pos[mid] <= y) {
+          k = mid;
+          lo = mid + 1;
+        } else hi = mid - 1;
       }
       if (k >= n - 1) return { A: m.act[n - 1], present: n - 1 };
       var f = Math.min(1, (y - pos[k]) / Math.max(1, pos[k + 1] - pos[k]));
@@ -1033,18 +1323,20 @@
     m.trans.forEach(function (tr, k) {
       if (!tr.wait) return;
       var span = el('span', 'wait-span');
-      span.style.left = (m.act[k] / total * 100).toFixed(3) + '%';
-      span.style.width = (tr.len / total * 100).toFixed(3) + '%';
+      span.style.left = ((m.act[k] / total) * 100).toFixed(3) + '%';
+      span.style.width = ((tr.len / total) * 100).toFixed(3) + '%';
       span.title = humanSpan(tr.gap) + ' compressed';
       ticks.appendChild(span);
     });
     view.chapters.forEach(function (c) {
       var tick = el('button', 'tick');
       tick.type = 'button';
-      tick.style.left = (m.act[c.item] / total * 100).toFixed(3) + '%';
+      tick.style.left = ((m.act[c.item] / total) * 100).toFixed(3) + '%';
       tick.title = 'Chapter ' + c.number + ': ' + c.title;
       tick.setAttribute('aria-label', tick.title);
-      tick.addEventListener('click', function () { view.seekItem(c.item, true); });
+      tick.addEventListener('click', function () {
+        view.seekItem(c.item, true);
+      });
       ticks.appendChild(tick);
     });
 
@@ -1064,7 +1356,8 @@
       var tr = m.trans[p.k];
       var inWait = present >= 0 && tr && tr.wait && p.f > 0.01 && p.f < 0.99;
       if (inWait) {
-        var label = '⏩ fast-forwarding ' + humanSpan(tr.gap) + (tr.group ? ' of ' + m.ffLabel : '');
+        var label =
+          '⏩ fast-forwarding ' + humanSpan(tr.gap) + (tr.group ? ' of ' + m.ffLabel : '');
         if (ff.textContent !== label) ff.textContent = label;
       }
       ff.classList.toggle('on', !!inWait);
@@ -1081,7 +1374,10 @@
     view.onScroll = onScroll;
 
     function stopDriving() {
-      if (view.driving) { view.driving.cancel(); view.driving = null; }
+      if (view.driving) {
+        view.driving.cancel();
+        view.driving = null;
+      }
     }
 
     // Animate A to target over dur seconds, scrolling the page with it.
@@ -1089,13 +1385,23 @@
       stopDriving();
       var from = view.A;
       var start = performance.now();
-      var job = { cancelled: false, cancel: function () { job.cancelled = true; } };
+      var job = {
+        cancelled: false,
+        cancel: function () {
+          job.cancelled = true;
+        },
+      };
       view.driving = job;
       function apply(A) {
         window.scrollTo(0, view.scrollFor(A));
         view.render(A);
       }
-      if (!(dur > 0)) { view.driving = null; apply(target); if (done) done(); return; }
+      if (!(dur > 0)) {
+        view.driving = null;
+        apply(target);
+        if (done) done();
+        return;
+      }
       if (REDUCED) {
         // No continuous motion: hold, then jump.
         var timer = setTimeout(function () {
@@ -1104,7 +1410,10 @@
           apply(target);
           if (done) done();
         }, dur * 1000);
-        job.cancel = function () { job.cancelled = true; clearTimeout(timer); };
+        job.cancel = function () {
+          job.cancelled = true;
+          clearTimeout(timer);
+        };
         return;
       }
       function frame(now) {
@@ -1112,12 +1421,19 @@
         var f = Math.min(1, (now - start) / (dur * 1000));
         apply(from + (target - from) * ease(f));
         if (f < 1) requestAnimationFrame(frame);
-        else { view.driving = null; if (done) done(); }
+        else {
+          view.driving = null;
+          if (done) done();
+        }
       }
       requestAnimationFrame(frame);
     }
-    var linear = function (f) { return f; };
-    var inOut = function (f) { return f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2; };
+    var linear = function (f) {
+      return f;
+    };
+    var inOut = function (f) {
+      return f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+    };
 
     view.seek = function (A, animate) {
       A = Math.max(0, Math.min(total, A));
@@ -1127,7 +1443,9 @@
         if (wasPlaying) play();
       });
     };
-    view.seekItem = function (idx, animate) { view.seek(m.act[idx], animate); };
+    view.seekItem = function (idx, animate) {
+      view.seek(m.act[idx], animate);
+    };
 
     // ------------------------------------------------ playback
 
@@ -1147,22 +1465,32 @@
     function stepDuration(k) {
       var tr = m.trans[k];
       var s = view.speed;
-      var d = tr.wait ? FF_S / Math.sqrt(s) : Math.min(MAX_STEP_S, Math.max(MIN_STEP_S, tr.gap)) / s;
+      var d = tr.wait
+        ? FF_S / Math.sqrt(s)
+        : Math.min(MAX_STEP_S, Math.max(MIN_STEP_S, tr.gap)) / s;
       var node = view.itemEls[k];
-      if (node._type && !REDUCED && !STATIC) d = Math.max(d, (typeDuration(node._type.text) + 0.2) / s);
+      if (node._type && !REDUCED && !STATIC)
+        d = Math.max(d, (typeDuration(node._type.text) + 0.2) / s);
       return d;
     }
 
     function step() {
       if (!view.playing) return;
       var p = locate(m, view.A);
-      if (p.k >= view.n - 1) { pause(); return; }
+      if (p.k >= view.n - 1) {
+        pause();
+        return;
+      }
       var d = stepDuration(p.k) * (1 - p.f);
       drive(m.act[p.k + 1], d, linear, step);
     }
 
     function play() {
-      if (view.speed === Infinity) { pause(); drive(total, 0, linear); return; }
+      if (view.speed === Infinity) {
+        pause();
+        drive(total, 0, linear);
+        return;
+      }
       if (view.A >= total - 1e-6) view.A = 0;
       setPlaying(true);
       step();
@@ -1173,21 +1501,34 @@
       stopDriving();
     }
 
-    function toggle() { if (view.playing) pause(); else play(); }
+    function toggle() {
+      if (view.playing) pause();
+      else play();
+    }
     view.togglePlay = toggle;
     playBtn.addEventListener('click', toggle);
 
     speedBtns.forEach(function (b) {
       b.addEventListener('click', function () {
         view.speed = b.dataset.speed === 'inf' ? Infinity : Number(b.dataset.speed);
-        speedBtns.forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
-        if (view.playing) { stopDriving(); if (view.speed === Infinity) play(); else step(); }
+        speedBtns.forEach(function (o) {
+          o.setAttribute('aria-pressed', String(o === b));
+        });
+        if (view.playing) {
+          stopDriving();
+          if (view.speed === Infinity) play();
+          else step();
+        }
       });
     });
 
     // Dragging the scrubber scrolls the page to the matching point.
-    range.addEventListener('pointerdown', function () { dragging = true; });
-    window.addEventListener('pointerup', function () { dragging = false; });
+    range.addEventListener('pointerdown', function () {
+      dragging = true;
+    });
+    window.addEventListener('pointerup', function () {
+      dragging = false;
+    });
     range.addEventListener('input', function () {
       var wasPlaying = view.playing;
       stopDriving();
@@ -1198,8 +1539,18 @@
 
     // The reader taking over the scroll pauses playback and cancels seeks.
     function userScrollIntent(e) {
-      if (e.type === 'keydown' && ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].indexOf(e.key) < 0) return;
-      if (e.type === 'keydown' && e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
+      if (
+        e.type === 'keydown' &&
+        ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].indexOf(e.key) < 0
+      )
+        return;
+      if (
+        e.type === 'keydown' &&
+        e.target &&
+        e.target.closest &&
+        e.target.closest('input, textarea, select')
+      )
+        return;
       if (view.playing) pause();
       else stopDriving();
     }
@@ -1211,7 +1562,12 @@
       if (e.code !== 'Space' && e.key !== ' ') return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
       var t = e.target;
-      if (t && t.closest && t.closest('button, a, input, textarea, select, summary, [contenteditable="true"]')) return;
+      if (
+        t &&
+        t.closest &&
+        t.closest('button, a, input, textarea, select, summary, [contenteditable="true"]')
+      )
+        return;
       e.preventDefault();
       toggle();
     });
@@ -1229,14 +1585,26 @@
       });
     }
     view.invalidate = invalidate;
-    if (window.ResizeObserver) new ResizeObserver(invalidate).observe(document.getElementById('app'));
+    if (window.ResizeObserver)
+      new ResizeObserver(invalidate).observe(document.getElementById('app'));
     window.addEventListener('resize', invalidate);
 
     if (window.gsap && window.ScrollTrigger) {
       window.gsap.registerPlugin(window.ScrollTrigger);
-      window.ScrollTrigger.create({ start: 0, end: 'max', onUpdate: onScroll, onRefresh: onScroll });
+      window.ScrollTrigger.create({
+        start: 0,
+        end: 'max',
+        onUpdate: onScroll,
+        onRefresh: onScroll,
+      });
     } else {
-      window.addEventListener('scroll', function () { requestAnimationFrame(onScroll); }, { passive: true });
+      window.addEventListener(
+        'scroll',
+        function () {
+          requestAnimationFrame(onScroll);
+        },
+        { passive: true },
+      );
     }
     onScroll();
   }
@@ -1247,10 +1615,14 @@
     var old = view.present;
     if (present === old) return;
     view.present = present;
-    var lo = Math.min(old, present) + 1, hi = Math.max(old, present);
+    var lo = Math.min(old, present) + 1,
+      hi = Math.max(old, present);
     for (var i = Math.max(0, lo); i <= hi && i < view.n; i++) {
       var future = i > present;
-      if (!STATIC) view.revealEls[i].forEach(function (e) { e.classList.toggle('is-future', future); });
+      if (!STATIC)
+        view.revealEls[i].forEach(function (e) {
+          e.classList.toggle('is-future', future);
+        });
     }
     if (present > old) {
       for (var j = Math.max(0, old + 1); j <= present; j++) {
@@ -1265,17 +1637,21 @@
 
   function updateChapter(view, idx, frac) {
     var cur = -1;
-    view.chapters.forEach(function (c, i) { if (c.item <= idx) cur = i; });
+    view.chapters.forEach(function (c, i) {
+      if (c.item <= idx) cur = i;
+    });
     if (cur !== view.curChapter) {
       view.curChapter = cur;
       view.chapButtons.forEach(function (b, i) {
         b.classList.toggle('current', i === cur);
-        if (i === cur) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+        if (i === cur) b.setAttribute('aria-current', 'step');
+        else b.removeAttribute('aria-current');
       });
       if (view.chapNow) {
-        view.chapNow.textContent = cur >= 0
-          ? 'chapter ' + (cur + 1) + '/' + view.chapters.length
-          : view.chapters.length + ' chapters';
+        view.chapNow.textContent =
+          cur >= 0
+            ? 'chapter ' + (cur + 1) + '/' + view.chapters.length
+            : view.chapters.length + ' chapters';
       }
       var cb = view.chapButtons[cur];
       var list = cb && cb.closest('.chap-list');
@@ -1284,7 +1660,8 @@
       }
     }
     if (view.progressFill) {
-      view.progressFill.style.transform = 'scaleX(' + Math.max(0, Math.min(1, frac)).toFixed(4) + ')';
+      view.progressFill.style.transform =
+        'scaleX(' + Math.max(0, Math.min(1, frac)).toFixed(4) + ')';
     }
   }
 
@@ -1294,31 +1671,56 @@
     var gsap = window.gsap;
     var hero = document.querySelector('.hero');
     var tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    tl.from(hero.querySelector('.eyebrow'), { autoAlpha: 0, y: 12, duration: 0.5 })
-      .from(hero.querySelectorAll('.hero-title .w'), { autoAlpha: 0, y: 40, rotateX: -50, duration: 0.8, stagger: 0.06 }, '-=0.2')
-      .from(hero.querySelectorAll('.lede, .intro, .cta'), { autoAlpha: 0, y: 18, duration: 0.6, stagger: 0.1 }, '-=0.45');
+    tl.from(hero.querySelector('.eyebrow'), {
+      autoAlpha: 0,
+      y: 12,
+      duration: 0.5,
+    })
+      .from(
+        hero.querySelectorAll('.hero-title .w'),
+        { autoAlpha: 0, y: 40, rotateX: -50, duration: 0.8, stagger: 0.06 },
+        '-=0.2',
+      )
+      .from(
+        hero.querySelectorAll('.lede, .intro, .cta'),
+        { autoAlpha: 0, y: 18, duration: 0.6, stagger: 0.1 },
+        '-=0.45',
+      );
     var setup = hero.querySelector('.setup');
     if (setup) {
-      tl.from(setup, { autoAlpha: 0, y: 40, rotate: 3, duration: 0.9 }, 0.35)
-        .from(setup.querySelectorAll('.step'), { autoAlpha: 0, x: 20, duration: 0.5, stagger: 0.12 }, '-=0.4');
+      tl.from(setup, { autoAlpha: 0, y: 40, rotate: 3, duration: 0.9 }, 0.35).from(
+        setup.querySelectorAll('.step'),
+        { autoAlpha: 0, x: 20, duration: 0.5, stagger: 0.12 },
+        '-=0.4',
+      );
     }
     gsap.from('.stat', {
-      autoAlpha: 0, y: 24, duration: 0.6, stagger: 0.07, ease: 'power2.out',
-      scrollTrigger: { trigger: '.stats', start: 'top 85%', once: true }
+      autoAlpha: 0,
+      y: 24,
+      duration: 0.6,
+      stagger: 0.07,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '.stats', start: 'top 85%', once: true },
     });
   }
 
   // ---------------------------------------------------------------- boot
 
   function boot(data) {
-    var events = data.events, story = data.story || {};
+    var events = data.events,
+      story = data.story || {};
     if (!Array.isArray(events) || !events.length) throw new Error('events.json holds no events');
     events.forEach(function (e) {
       e.t = Number(e.t);
       if (e.t_end != null) e.t_end = Number(e.t_end);
     });
     timeZone = story.timezone;
-    try { clock(events[0].t); } catch (e) { console.warn('ignoring invalid story.timezone', timeZone); timeZone = undefined; }
+    try {
+      clock(events[0].t);
+    } catch {
+      console.warn('ignoring invalid story.timezone', timeZone);
+      timeZone = undefined;
+    }
 
     if (story.title) document.title = story.title + ' · session replay';
     setupMarkdown();
@@ -1335,7 +1737,11 @@
     document.body.classList.toggle('static', STATIC);
     if (!STATIC) {
       // Nothing has happened yet: every item starts in the future.
-      view.revealEls.forEach(function (els) { els.forEach(function (e) { e.classList.add('is-future'); }); });
+      view.revealEls.forEach(function (els) {
+        els.forEach(function (e) {
+          e.classList.add('is-future');
+        });
+      });
     }
 
     app.addEventListener('click', function (e) {
@@ -1345,7 +1751,9 @@
     });
 
     if (OPEN_ALL) {
-      app.querySelectorAll('.transcript button.sig').forEach(function (b) { toggleAccordion(b, true); });
+      app.querySelectorAll('.transcript button.sig').forEach(function (b) {
+        toggleAccordion(b, true);
+      });
     }
 
     if (window.gsap && window.ScrollTrigger) window.gsap.registerPlugin(window.ScrollTrigger);
@@ -1359,10 +1767,13 @@
   }
 
   function start() {
-    loadData().then(checkSchema).then(boot).catch(function (err) {
-      console.error(err);
-      showLoadError(err);
-    });
+    loadData()
+      .then(checkSchema)
+      .then(boot)
+      .catch(function (err) {
+        console.error(err);
+        showLoadError(err);
+      });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

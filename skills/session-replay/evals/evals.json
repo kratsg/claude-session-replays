@@ -1,0 +1,26 @@
+{
+  "skill_name": "session-replay",
+  "evals": [
+    {
+      "id": 1,
+      "name": "zee-after-the-fact",
+      "prompt": "Make a replay of the Z→ee notebook session I ran in ~/mcp-demo/zee yesterday, like the other replays in this repo.",
+      "expected_output": "A story folder dated by the session (US Central) with redacted events.json and a story.json whose cards are checked against their events; no username, hub URL or account ID; knowledge-base results omitted; nothing committed.",
+      "files": ["inputs/zee-session.jsonl"]
+    },
+    {
+      "id": 2,
+      "name": "marked-span",
+      "prompt": "I marked part of my debugging session with /replay-start and /replay-stop. Turn that part into a replay.",
+      "expected_output": "Only the span between the markers, without the marker exchange; every planted secret masked (token, password, username, colleague, internal hosts, IPs, email, hub URL, account ID), including the one before the start marker never appearing.",
+      "files": ["inputs/marked-session.jsonl"]
+    },
+    {
+      "id": 3,
+      "name": "generic-coding",
+      "prompt": "Turn my wordfreq coding session into a replay page so I can show students how Claude Code works through a small task with tests.",
+      "expected_output": "A replay of a session with no MCP servers: no atlas-af or HTCondor assumptions in the story, polling left off, generic stats; commentary aimed at students.",
+      "files": ["inputs/wordfreq-session.jsonl"]
+    }
+  ]
+}

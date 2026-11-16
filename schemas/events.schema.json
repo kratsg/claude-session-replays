@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kratsg.github.io/claude-session-replays/schemas/events.schema.json",
+  "title": "Session replay events",
+  "description": "The redacted session, in time order. `t` and `t_end` are Unix seconds.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["kind", "t"],
+    "properties": {
+      "kind": { "enum": ["prompt", "interject", "text", "tool"] },
+      "t": { "type": "number" },
+      "row": { "type": "integer", "description": "Line in the source transcript (provenance only)." }
+    },
+    "oneOf": [
+      {
+        "properties": {
+          "kind": { "enum": ["prompt", "interject"] },
+          "text": { "type": "string" },
+          "abridged": { "type": "boolean" }
+        },
+        "required": ["text"]
+      },
+      {
+        "properties": { "kind": { "const": "text" }, "text": { "type": "string" } },
+        "required": ["text"]
+      },
+      {
+        "properties": {
+          "kind": { "const": "tool" },
+          "name": { "type": "string", "minLength": 1 },
+          "input": { "type": ["object", "string"] },
+          "result": { "type": "string" },
+          "is_error": { "type": "boolean" },
+          "t_end": { "type": "number" }
+        },
+        "required": ["name", "input"]
+      }
+    ]
+  }
+}

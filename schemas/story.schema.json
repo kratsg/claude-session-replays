@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kratsg.github.io/claude-session-replays/schemas/story.schema.json",
+  "title": "Session replay story",
+  "description": "Everything story-specific the player shows around events.json: hero, setup, chapters, commentary and outro. Indices in `at` refer to positions in the story's events.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "title", "chapters", "cards"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema": { "const": 1, "description": "Story schema version; the player refuses a newer one." },
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "timezone": {
+      "type": "string",
+      "description": "IANA zone for clock times, e.g. America/Chicago. Default: the viewer's zone.",
+      "pattern": "^[A-Za-z]+(?:/[A-Za-z0-9_+-]+)*$"
+    },
+    "setup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "intro": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label"],
+            "properties": {
+              "label": { "type": "string", "minLength": 1 },
+              "code": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "stats_extra": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "value"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "value": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "title"],
+        "properties": {
+          "at": { "$ref": "#/$defs/eventIndex" },
+          "title": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "title", "body"],
+        "properties": {
+          "at": { "$ref": "#/$defs/eventIndex" },
+          "title": { "type": "string", "minLength": 1 },
+          "body": { "type": "string", "minLength": 1, "description": "Plain text; `backticks` render as code." },
+          "image": { "$ref": "#/$defs/image" }
+        }
+      }
+    },
+    "outro": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "note": { "type": "string" },
+        "image": { "$ref": "#/$defs/image" },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "href"],
+            "properties": {
+              "label": { "type": "string", "minLength": 1 },
+              "href": { "type": "string", "pattern": "^https?://" }
+            }
+          }
+        }
+      }
+    },
+    "poll_tools": {
+      "type": "array",
+      "description": "MCP tool names (without the mcp__<server>__ prefix) whose consecutive calls collapse into one waiting line.",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "poll_label": { "type": "string" },
+    "ff_label": { "type": "string" }
+  },
+  "$defs": {
+    "eventIndex": { "type": "integer", "minimum": 0 },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "alt"],
+      "properties": {
+        "src": {
+          "type": "string",
+          "description": "Path relative to the story folder, e.g. assets/plot.png.",
+          "pattern": "^(?!.*\\.\\.)[A-Za-z0-9_][A-Za-z0-9_./-]*$"
+        },
+        "alt": { "type": "string", "minLength": 1 },
+        "caption": { "type": "string" }
+      }
+    }
+  }
+}

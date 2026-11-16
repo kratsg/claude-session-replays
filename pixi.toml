@@ -1,0 +1,15 @@
+[workspace]
+name = "claude-session-replays"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64"]
+
+[dependencies]
+python = "3.12.*"
+check-jsonschema = ">=0.29"
+
+[tasks]
+validate-stories = "check-jsonschema --schemafile schemas/story.schema.json stories/*/story.json"
+validate-events = "check-jsonschema --schemafile schemas/events.schema.json stories/*/events.json"
+validate = { depends-on = ["validate-stories", "validate-events"] }
+build = { cmd = "python tools/build_site.py", depends-on = ["validate"] }
+serve = { cmd = "python -m http.server -d _site 8000", depends-on = ["build"] }

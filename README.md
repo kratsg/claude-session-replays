@@ -71,6 +71,16 @@ Install the `session-replay` skill in Claude Code:
 /plugin install session-replay@claude-session-replays
 ```
 
+or, with the [GitHub CLI](https://cli.github.com/) (`gh skill`, in preview; works for any agent
+it supports):
+
+```bash
+gh skills install kratsg/claude-session-replays session-replay --agent claude-code --scope user
+```
+
+The plugin also adds `/replay-start` and `/replay-stop`; with `gh skills`, type the marker text
+`session-replay:start` / `session-replay:stop` instead.
+
 Then fork this repository, open Claude Code in your fork, and ask for a replay of a
 session (for example, "make a replay of my last session in ~/work/my-project"). The skill
 (`skills/session-replay/`) captures and redacts the transcript, drafts the commentary with
@@ -81,7 +91,7 @@ here: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Copyright © 2026 Giordon Stark.
+Copyright © 2026 [Giordon Stark](https://giordonstark.com/).
 
 - Code (player, tools, skill): [MIT](LICENSE).
 - Replays (`stories/`): [CC BY 4.0](stories/LICENSE).

@@ -143,8 +143,8 @@ def landing_page(entries: list[dict], version: str) -> str:
     <p>Then fork <a href="https://github.com/kratsg/claude-session-replays">the repository</a>, open Claude Code in your fork, and ask something like <em>"make a replay of my last session in ~/work/my-project"</em>. The skill stops for your review before anything is published. See the <a href="https://github.com/kratsg/claude-session-replays#readme">README</a> for the details.</p>
   </section>
   <footer>
-    <p>© 2026 <a href="https://github.com/kratsg">Giordon Stark</a> · code <a href="https://github.com/kratsg/claude-session-replays/blob/main/LICENSE">MIT</a> · replays <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="https://github.com/kratsg/claude-session-replays">GitHub</a> · player {html.escape(version)}</p>
-    <p>If you build on this work, keep the credit to Giordon Stark and link back to this project.</p>
+    <p>© 2026 <a href="https://giordonstark.com/">Giordon Stark</a> · code <a href="https://github.com/kratsg/claude-session-replays/blob/main/LICENSE">MIT</a> · replays <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · <a href="https://github.com/kratsg/claude-session-replays">GitHub</a> · player {html.escape(version)}</p>
+    <p>If you build on this work, keep the credit to <a href="https://giordonstark.com/">Giordon Stark</a> and link back to this project.</p>
   </footer>
 </main>
 </body>
@@ -202,3 +202,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    <p>Or with the GitHub CLI (any agent it supports; without the plugin, type <code>session-replay:start</code> and <code>session-replay:stop</code> instead of the <code>/replay-start</code> and <code>/replay-stop</code> commands):</p>
+    <pre><code>gh skills install kratsg/claude-session-replays session-replay --agent claude-code --scope user</code></pre>

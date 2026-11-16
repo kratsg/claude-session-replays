@@ -593,6 +593,10 @@
     }
     // Attribution travels with every site built from this player (MIT notice).
     var credit = el('p', 'credit');
+    var author = el('a', null, 'Giordon Stark');
+    author.href = 'https://giordonstark.com/';
+    author.target = '_blank';
+    author.rel = 'noopener noreferrer';
     var repo = el('a', null, 'claude-session-replays');
     repo.href = 'https://github.com/kratsg/claude-session-replays';
     repo.target = '_blank';
@@ -601,7 +605,9 @@
       credit,
       document.createTextNode('made with '),
       repo,
-      document.createTextNode(' · player ' + PLAYER_VERSION + ' © Giordon Stark, MIT'),
+      document.createTextNode(' · player ' + PLAYER_VERSION + ' © '),
+      author,
+      document.createTextNode(', MIT'),
     );
     inner.appendChild(credit);
     var top = el('a', 'to-top', '↑ back to the top');

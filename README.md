@@ -4,7 +4,7 @@ Real Claude Code sessions, replayed as scrollable pages with commentary: the pro
 the scrubber follows your scroll, long waits on compute fast-forward, and every tool call opens to
 show exactly what went in and what came back.
 
-Live site: <https://kratsg.github.io/claude-session-replays/>
+Live site, with every replay listed newest first: <https://kratsg.github.io/claude-session-replays/>
 
 ## Layout
 
@@ -18,13 +18,6 @@ Live site: <https://kratsg.github.io/claude-session-replays/>
 | `.pre-commit-config.yaml`     | Hooks run by [prek](https://github.com/j178/prek): prettier, biome (JS/CSS lint, `biome.jsonc`), ruff, codespell, schema validation, zizmor.                                                                                                    |
 | `tbump.toml`                  | Player release configuration.                                                                                                                                                                                                                   |
 | `.github/workflows/pages.yml` | Builds on every PR; builds and deploys GitHub Pages on `main`.                                                                                                                                                                                  |
-
-## Stories
-
-| Story                                                                 | Session                                                                                                                                                                    |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`2026-11-15-atlas-af-rntuple`](stories/2026-11-15-atlas-af-rntuple/) | An agent searches the ATLAS knowledge base and converts 32 GB of TTree ntuples to RNTuple with HTCondor batch jobs on the UChicago AF, through the `atlas-af` MCP server.  |
-| [`2026-11-15-atlas-af-zee`](stories/2026-11-15-atlas-af-zee/)         | One prompt to Claude Code (Sonnet) builds a Z→ee tutorial notebook on the AF's JupyterHub: AMI, Rucio, the facility XCache and a fit to the Z peak, in under four minutes. |
 
 ## View locally
 
